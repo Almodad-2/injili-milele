@@ -14,11 +14,10 @@ OUT = os.path.join(ROOT, 'docs')
 SITE = json.load(open(os.path.join(ROOT, 'content/site.json')))
 PRODUCTS = json.load(open(os.path.join(ROOT, 'content/products.json')))
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-FONTS = ('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;'
-         '1,9..144,300..700,0..100&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600'
-         '&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap')
+FONTS = ('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800'
+         '&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap')
 LOGO = '91060cb46f'
-ART = open(os.path.join(ROOT, 'src/art/dawn.svg'), encoding='utf-8').read()  # landing illustration
+ART = '<div class="aurora"><span></span><span></span><span></span><span></span></div><div class="grid-lines"></div>'  # landing background
 
 PATHS = {
     'sw': {'articles': 'makala', 'store': 'duka', 'cart': 'duka/kikapu', 'about': 'kuhusu'},
@@ -32,8 +31,8 @@ T = {
         'home': 'Mwanzo', 'articles': 'Makala', 'store': 'Duka', 'about': 'Kuhusu', 'cart': 'Kikapu',
         'other': 'EN', 'otherName': 'English', 'theme': 'Badili mwonekano',
         'heroKicker': 'Injili Milele · Makala Maalum',
-        'heroTitle': 'Neno lililo<br><em>hai</em>, kwa kina.',
-        'readFeatured': 'Soma makala mpya', 'browse': 'Tazama makala zote', 'scroll': 'Shuka chini',
+        'heroTitle': 'Neno lililo <em>hai</em>,<br>kwa kina.',
+        'latest': 'Makala mpya', 'readFeatured': 'Soma makala mpya', 'browse': 'Tazama makala zote', 'scroll': 'Shuka chini',
         'verse': 'Neno lako ni taa ya miguu yangu, na mwanga wa njia yangu.', 'verseRef': 'Zaburi 119:105',
         'allArticles': 'Makala <em>zote</em>', 'library': 'Maktaba',
         'search': 'Tafuta makala…', 'all': 'Zote', 'noResults': 'Hakuna makala inayolingana na utafutaji wako.',
@@ -92,8 +91,8 @@ T = {
         'home': 'Home', 'articles': 'Articles', 'store': 'Store', 'about': 'About', 'cart': 'Cart',
         'other': 'SW', 'otherName': 'Kiswahili', 'theme': 'Toggle theme',
         'heroKicker': 'Injili Milele · Featured Articles',
-        'heroTitle': 'The living<br><em>Word</em>, in depth.',
-        'readFeatured': 'Read the latest', 'browse': 'Browse all articles', 'scroll': 'Scroll',
+        'heroTitle': 'The living <em>Word</em>,<br>in depth.',
+        'latest': 'Latest articles', 'readFeatured': 'Read the latest', 'browse': 'Browse all articles', 'scroll': 'Scroll',
         'verse': 'Your word is a lamp to my feet and a light to my path.', 'verseRef': 'Psalm 119:105',
         'allArticles': 'All <em>articles</em>', 'library': 'Library',
         'search': 'Search articles…', 'all': 'All', 'noResults': 'No articles match your search.',
@@ -383,10 +382,15 @@ def build_home(lang):
         f'<button class="chip" type="button" data-filter="{e(c)}" aria-pressed="false">{e(c)}</button>' for c in cats)
     featured_products = [p for p in PRODUCTS if p['lang'] == lang][:3]
     books = ''.join(cover(p, lang, root) for p in featured_products)
+    stack = ''.join(
+        f'<a class="glass" href="{root}{art_path(a)}"><img src="{root}assets/img/{a["card"]}.jpg" alt="" loading="eager">'
+        f'<div><small>{e(a["category"])}</small><b>{e(a["title"])}</b><span>{t["minRead"].format(n=a["minutes"])}</span></div></a>'
+        for a in arts[:3])
     body = f'''
 <section class="hero">
   <div class="hero-bg">{ART}</div>
-  <div class="wrap">
+  <div class="wrap hero-grid">
+   <div class="hero-copy">
     <span class="eyebrow rise">{t['heroKicker']}</span>
     <h1 class="rise d1">{t['heroTitle']}</h1>
     <p class="lede rise d2">{t['tagline']}</p>
@@ -395,6 +399,11 @@ def build_home(lang):
       <a class="btn btn-ghost" href="#makala">{t['browse']}</a>
     </div>
     <p class="hero-verse rise d4"><b>{t['verseRef']}</b><span>“{t['verse']}”</span></p>
+   </div>
+   <div class="hero-stack rise d3" aria-label="{t['latest']}">
+    <p class="stack-label">{t['latest']}</p>
+    {stack}
+   </div>
   </div>
   <a class="scroll-cue" href="#makala" aria-label="{t['browse']}"><span>{t['scroll']}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
 </section>
@@ -854,28 +863,28 @@ def build_pdfs():
 <style>
 @page {{ size: A5; margin: 18mm 16mm 20mm; }}
 @page :first {{ margin: 0; }}
-body {{ font-family: 'Source Serif 4', Georgia, serif; font-size: 10.5pt; line-height: 1.6; color: #172018; margin: 0; }}
+body {{ font-family: 'Fira Sans', sans-serif; font-size: 10.5pt; line-height: 1.6; color: #172018; margin: 0; }}
 .cover {{ height: 210mm; width: 148mm; position: relative; color: #f2f4fa; background: #1d2747; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; padding: 22mm 16mm 18mm 20mm; box-sizing: border-box; }}
 .cover img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; z-index: 0; }}
 .cover::before {{ content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(29,39,71,.15), rgba(29,39,71,.95) 72%); z-index: 1; }}
 .cover > * {{ position: relative; z-index: 2; }}
 .cover .k {{ font-family: "Fira Sans", sans-serif; letter-spacing: .25em; text-transform: uppercase; font-size: 8pt; color: #d5def5; }}
-.cover h1 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 30pt; line-height: 1.02; margin: 0 0 8mm; letter-spacing: -.02em; }}
+.cover h1 {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-weight: 400; font-size: 30pt; line-height: 1.02; margin: 0 0 8mm; letter-spacing: -.02em; }}
 .cover p {{ font-size: 11pt; color: #d3d9ea; margin: 0 0 10mm; }}
 .cover .a {{ font-family: "Fira Sans", sans-serif; letter-spacing: .16em; text-transform: uppercase; font-size: 8pt; }}
 .toc {{ page-break-after: always; }}
-.toc h2 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 24pt; margin: 0 0 6mm; }}
-.toc ol {{ padding-left: 5mm; }} .toc li {{ margin: 0 0 4mm; }} .toc li::marker {{ color: #5a73aa; font-family: Fraunces, serif; }}
-.toc a {{ color: inherit; text-decoration: none; font-family: Fraunces, serif; font-size: 12pt; display: block; }}
+.toc h2 {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-weight: 400; font-size: 24pt; margin: 0 0 6mm; }}
+.toc ol {{ padding-left: 5mm; }} .toc li {{ margin: 0 0 4mm; }} .toc li::marker {{ color: #5a73aa; font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; }}
+.toc a {{ color: inherit; text-decoration: none; font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-size: 12pt; display: block; }}
 .toc span {{ font-size: 8.5pt; color: #5b6270; }}
 .art {{ page-break-before: always; }}
 .art .hero {{ width: 100%; height: 48mm; object-fit: cover; border-radius: 3mm; }}
 .cat {{ font-family: "Fira Sans", sans-serif; text-transform: uppercase; letter-spacing: .2em; font-size: 7.5pt; color: #5a73aa; margin: 6mm 0 2mm; font-weight: 700; }}
-.art h1 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 20pt; line-height: 1.1; margin: 0 0 3mm; letter-spacing: -.01em; }}
+.art h1 {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-weight: 400; font-size: 20pt; line-height: 1.1; margin: 0 0 3mm; letter-spacing: -.01em; }}
 .by {{ font-family: "Fira Sans", sans-serif; font-size: 8.5pt; color: #5b6270; margin-bottom: 6mm; }}
-.prose h2 {{ font-family: Fraunces, serif; font-weight: 500; font-size: 13pt; margin: 6mm 0 2mm; page-break-after: avoid; }}
+.prose h2 {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-weight: 500; font-size: 13pt; margin: 6mm 0 2mm; page-break-after: avoid; }}
 .prose p {{ margin: 0 0 3mm; text-align: justify; hyphens: auto; }}
-.prose > p:first-of-type::first-letter {{ float: left; font-family: Fraunces, serif; font-size: 34pt; line-height: .85; color: #5a73aa; margin: 1mm 1.5mm 0 0; }}
+.prose > p:first-of-type::first-letter {{ float: left; font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-size: 34pt; line-height: .85; color: #5a73aa; margin: 1mm 1.5mm 0 0; }}
 .prose blockquote {{ margin: 4mm 0; padding: 3mm 4mm; background: #e4e8f4; border-left: 2px solid #5a73aa; font-style: italic; page-break-inside: avoid; }}
 .prose blockquote p {{ margin: 0; }}
 .prose img {{ width: 100%; border-radius: 2mm; margin: 3mm 0; }}
@@ -883,10 +892,10 @@ body {{ font-family: 'Source Serif 4', Georgia, serif; font-size: 10.5pt; line-h
 .prose .dl a {{ color: #4257b8; }}
 .vid {{ font-family: "Fira Sans", sans-serif; font-size: 9pt; background: #e4e8f4; padding: 3mm; border-radius: 2mm; }}
 .qs {{ margin-top: 8mm; padding: 5mm; border: 1px solid #dfe4f1; border-radius: 3mm; page-break-inside: avoid; }}
-.qs h3 {{ font-family: Fraunces, serif; font-weight: 500; margin: 0 0 3mm; color: #5a73aa; }}
+.qs h3 {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-weight: 500; margin: 0 0 3mm; color: #5a73aa; }}
 .qs li {{ margin-bottom: 3mm; }} .qs .lines {{ height: 12mm; border-bottom: 1px dotted #c4cbdd; }}
 .colophon {{ page-break-before: always; text-align: center; padding-top: 50mm; font-size: 9pt; color: #5b6270; }}
-.colophon b {{ font-family: Fraunces, serif; font-size: 14pt; color: #172018; font-weight: 500; display: block; margin-bottom: 3mm; }}
+.colophon b {{ font-family: 'Sora', sans-serif; font-weight: 700; letter-spacing: -.02em; font-size: 14pt; color: #172018; font-weight: 500; display: block; margin-bottom: 3mm; }}
 </style></head><body>
 <section class="cover"><img src="file://{ROOT}/assets/img/{x['image']}.jpg">
 <div class="k">Injili Milele · PDF</div>
