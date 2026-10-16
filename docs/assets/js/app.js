@@ -561,14 +561,4 @@
     check();
   }
 
-  /* ---------- sell-with-us form ---------- */
-  var sell = document.querySelector('[data-sell]');
-  if (sell) {
-    sell.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var f = sell.elements;
-      var msg = [T.sellHello, '', T.name + ': ' + f.name.value, T.phone + ': ' + f.phone.value, T.product + ': ' + f.product.value, '', f.about.value].join('\n');
-      window.location.href = 'https://wa.me/' + MM.whatsapp + '?text=' + encodeURIComponent(msg);
-    });
-  }
 })();

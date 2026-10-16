@@ -408,10 +408,6 @@ body.home .site-header:not(.scrolled) .lang-switch { border-color: rgba(255, 255
 .pager small { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
 .pager b { font-family: var(--display); font-weight: 700; font-size: 1.02rem; line-height: 1.3; display: block; }
 .pager .next { text-align: right; grid-column: 2; }
-.translation { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: var(--radius-sm); background: var(--paper-2); font-size: .92rem; margin: 0 0 24px; }
-.translation a { font-weight: 600; color: var(--brand); }
-:root[data-theme="dark"] .translation a { color: var(--brand-soft); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .translation a { color: var(--brand-soft); } }
 
 /* ---------- Store ---------- */
 .store-hero { background: var(--ink); color: #eef1f8; position: relative; overflow: hidden; isolation: isolate; }
@@ -512,10 +508,6 @@ body.home .site-header:not(.scrolled) .lang-switch { border-color: rgba(255, 255
 .empty-cart { text-align: center; padding: 30px 10px; }
 .empty-cart p { font-family: var(--serif); color: var(--muted); }
 
-.sell { display: grid; gap: 28px; grid-template-columns: 1fr 1fr; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: calc(var(--radius) + 6px); padding: clamp(24px, 5vw, 48px); }
-.sell h2 { font-family: var(--display); font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.05; margin: 8px 0 12px; }
-.sell p { font-family: var(--serif); color: var(--muted); }
-@media (max-width: 760px) { .sell { grid-template-columns: 1fr; } }
 
 .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 120px); background: var(--ink); color: #f2f4fa; padding: 12px 18px; border-radius: 999px; box-shadow: var(--shadow-lg); z-index: 90; display: flex; gap: 12px; align-items: center; font-size: .92rem; transition: transform .35s cubic-bezier(.3, 1.4, .5, 1); max-width: calc(100% - 32px); }
 .toast.on { transform: translate(-50%, 0); }

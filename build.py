@@ -474,8 +474,6 @@ def build_article(a, i):
     url = SITE['baseUrl'] + rel
     share_text = f"{a['title']} — {url}"
     body_html = a['body'].replace('{{root}}', root)
-    trans = (f'<p class="translation">{ICON["book"]}<span>{t["translation"]} <a href="{root}{art_path(twin)}" hreflang="{other}">{t["readIn"]}</a></span></p>'
-             if twin else '')
     pager = '<nav class="pager">'
     if prev_a:
         pager += f'<a href="{root}{art_path(prev_a)}"><small>← {t["prev"]}</small><b>{e(prev_a["title"])}</b></a>'
@@ -512,7 +510,6 @@ def build_article(a, i):
 </div>
 <article class="wrap">
   <div class="prose">
-    {trans}
     {body_html}
   </div>
   <div class="article-end">
@@ -573,22 +570,6 @@ def build_store(lang):
     <div class="section-head"><div><span class="kicker">{t['store']} · {len(own)}</span><h2>{t['products']}</h2></div>
       <a class="btn btn-line" href="{root}{lang}/{p['cart']}/">{ICON['bag']} {t['cart']}</a></div>
     <div class="products">{''.join(items)}</div>
-  </div>
-</section>
-<section class="wrap">
-  <div class="sell reveal">
-    <div>
-      <span class="kicker">{t['sellKicker']}</span>
-      <h2>{t['sellTitle']}</h2>
-      <p>{t['sellText']}</p>
-    </div>
-    <form data-sell>
-      <div class="field"><label for="s-name">{t['name']}</label><input id="s-name" name="name" required autocomplete="name"></div>
-      <div class="field"><label for="s-phone">{t['phone']}</label><input id="s-phone" name="phone" type="tel" required autocomplete="tel"></div>
-      <div class="field"><label for="s-product">{t['product']}</label><input id="s-product" name="product" required></div>
-      <div class="field"><label for="s-about">{t['aboutProduct']}</label><textarea id="s-about" name="about" rows="3"></textarea></div>
-      <button class="btn btn-wa btn-block" type="submit">{ICON['wa']} {t['sendWa']}</button>
-    </form>
   </div>
 </section>'''
     other = 'en' if lang == 'sw' else 'sw'
