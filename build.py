@@ -1104,18 +1104,19 @@ PDF_CSS = """
 @page plain { @top-left { content: none; } @top-right { content: none; } @bottom-center { content: none; } }
 html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 body { font-family: 'Fira Sans', sans-serif; font-size: 10.2pt; line-height: 1.62; color: #1b2233; margin: 0; }
-.cover { height: 210mm; width: 148mm; position: relative; color: #f2f4fa; background: #0e1530; overflow: hidden; break-after: page;
-  display: flex; flex-direction: column; justify-content: space-between; padding: 20mm 15mm 16mm 19mm; box-sizing: border-box; }
-.cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .72; z-index: 0; }
-.cover::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(14,21,48,.55) 0%, rgba(14,21,48,.05) 30%, rgba(14,21,48,.35) 55%, rgba(14,21,48,.96) 82%); }
-.cover::after { content: ""; position: absolute; left: 10mm; top: 0; bottom: 0; width: .3mm; background: rgba(213,222,245,.35); z-index: 1; }
-.cover > * { position: relative; z-index: 2; }
-.cover .k { font-size: 7pt; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: #d5def5; display: flex; justify-content: space-between; }
-.cover .k b { color: #0e1530; background: #f2c14e; padding: 1mm 2.4mm; border-radius: 1mm; letter-spacing: .16em; }
-.cover .cat { font-size: 7.5pt; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #a3b7ea; margin-bottom: 4mm; }
-.cover h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 25pt; line-height: 1.06; letter-spacing: -.02em; margin: 0 0 5mm; }
-.cover p { font-size: 9.6pt; line-height: 1.5; color: #d3d9ea; margin: 0 0 8mm; }
-.cover .a { font-size: 7.5pt; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; padding-top: 4mm; border-top: .3mm solid rgba(213,222,245,.35); display: flex; justify-content: space-between; }
+.cover { height: 210mm; width: 148mm; display: flex; flex-direction: column; color: #f2f4fa; background: #0e1530; overflow: hidden; break-after: page; position: relative; }
+.cover .art { position: relative; height: 134mm; flex: none; }
+.cover .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cover .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,21,48,.55) 0%, rgba(14,21,48,0) 16%, rgba(14,21,48,0) 80%, #0e1530 100%); }
+.cover .k { position: absolute; z-index: 2; top: 8mm; left: 12mm; right: 12mm; font-size: 6.8pt; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; align-items: center; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.cover .k b { color: #0e1530; background: #f2c14e; padding: 1mm 2.4mm; border-radius: 1mm; letter-spacing: .16em; text-shadow: none; }
+.cover .info { flex: 1; display: flex; flex-direction: column; padding: 3mm 13mm 10mm; }
+.cover .cat { font-size: 6.8pt; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #a3b7ea; margin-bottom: 2.5mm; }
+.cover h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 16pt; line-height: 1.14; letter-spacing: -.015em; margin: 0 0 2.5mm;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cover p { font-size: 8.2pt; line-height: 1.45; color: #c4cbdd; margin: 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.cover .a { margin-top: auto; font-size: 6.8pt; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; padding-top: 3mm; border-top: .3mm solid rgba(213,222,245,.25); display: flex; justify-content: space-between; color: #d5def5; }
 .toc { break-after: page; page: plain; padding-top: 6mm; }
 .toc h2 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 22pt; letter-spacing: -.02em; margin: 0 0 7mm; }
 .toc ol { padding: 0; margin: 0; list-style: none; counter-reset: t; }
@@ -1229,9 +1230,9 @@ def pdf_html(spec):
     css = PDF_CSS.replace('__RUNNING__', running.replace('"', '\\"'))
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><title>{e(spec['title'])}</title>
 <link rel="stylesheet" href="{FONTS}"><style>{css}</style></head><body>
-<section class="cover"><img src="file://{ROOT}/assets/img/{spec['image']}.jpg">
-<div class="k"><span>Injili Milele</span>{badge}</div>
-<div><div class="cat">{e(spec['cat'])}</div><h1>{e(spec['title'])}</h1><p>{e(spec['subtitle'])}</p>
+<section class="cover"><div class="art"><img src="file://{ROOT}/assets/img/{spec['image']}.jpg">
+<div class="k"><span>Injili Milele</span>{badge}</div></div>
+<div class="info"><div class="cat">{e(spec['cat'])}</div><h1>{e(spec['title'])}</h1><p>{e(spec['subtitle'])}</p>
 <div class="a"><span>{single_by}</span><span>{year}</span></div></div></section>
 {toc}{''.join(parts)}{end}{back}
 </body></html>'''

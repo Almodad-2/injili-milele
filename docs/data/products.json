@@ -21,7 +21,7 @@
   "kind": "bundle",
   "preview": true,
   "url": "https://almodad-2.github.io/injili-milele/sw/duka/makala-maalum-mkusanyiko/",
-  "pages": 88
+  "pages": 89
  },
  {
   "id": "sabato-somo",
@@ -43,7 +43,7 @@
   "kind": "bundle",
   "preview": true,
   "url": "https://almodad-2.github.io/injili-milele/sw/duka/sabato-somo/",
-  "pages": 19
+  "pages": 20
  },
  {
   "id": "featured-articles-collection",
@@ -185,11 +185,11 @@
   "title": "Kwa Nini Mungu Alimuumba Lusifa?",
   "category": "Pambano Kuu",
   "format": "pdf",
-  "subtitle": "Pambano Kuu · kurasa 7 · PDF",
+  "subtitle": "Pambano Kuu · kurasa 8 · PDF",
   "description": "Ingawaje Biblia inavidokezo vichache kuhusu Swali hili, bado hata hivyo haiwezekani kulitolea jibu linalotosheleza katika ukamilifu wake. Mada hii haijashughulikiwa kwa uwazi na kwa kina…",
   "includes": [],
   "url": "https://almodad-2.github.io/injili-milele/sw/makala/kwa-nini-mungu-alimuumba-lusifa/",
-  "pages": 7
+  "pages": 8
  },
  {
   "id": "a-kalenda-ya-gregory-na-sabato",
