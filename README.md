@@ -79,3 +79,22 @@ Authorized domains.
 
 Website prices still come from `content/products.json` as a fallback; values set in the
 dashboard override them live, with no rebuild needed.
+
+## Pesapal payments (Cloudflare Worker)
+
+`payments/` is a Cloudflare Worker at https://makala-payments.modaofpeace.workers.dev
+that sits between the website, Pesapal (API 3.0, live) and the dashboard:
+
+1. Cart → `POST /pay`: the Worker recomputes the price (dashboard prices + discount code),
+   creates the Pesapal order and returns the payment page.
+2. Pesapal → `GET /ipn` and the thank-you page → `GET /status`: the Worker confirms the
+   payment with `GetTransactionStatus`, marks it paid and emails the buyer and the admin (Brevo).
+3. Downloads: `GET /dl/<token>` serves PDFs from Cloudflare KV through signed links valid 7 days.
+4. Dashboard: `GET /admin/sync` (Firebase ID token of an admin) copies paid orders into
+   Firestore; `GET /admin/links` makes download links for "Send books".
+
+Secrets (in Cloudflare, never in git): `PESAPAL_CONSUMER_KEY`, `PESAPAL_CONSUMER_SECRET`,
+`LINK_SECRET`, `BREVO_API_KEY`. Deploy with `cd payments && npx wrangler deploy`.
+
+After regenerating a paid PDF, upload it again:
+`npx wrangler kv key put --binding=STORE --remote "pdf:<product-id>" --path ../store-private/<file>.pdf`

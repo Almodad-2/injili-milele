@@ -474,6 +474,14 @@ body.home .site-header:not(.scrolled) .lang-switch { border-color: rgba(255, 255
 .coupon-msg { margin: 8px 0 0; font-size: .88rem; min-height: 1.2em; }
 .coupon-msg.ok { color: #2e8b57; } .coupon-msg.bad { color: var(--rose); }
 
+/* payment options */
+.alt-pay { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.alt-pay summary { cursor: pointer; font-weight: 600; font-size: .92rem; color: var(--accent); list-style: none; }
+.alt-pay summary::-webkit-details-marker { display: none; }
+.alt-pay summary::after { content: " +"; }
+.alt-pay[open] summary::after { content: " −"; }
+.alt-pay[open] summary { margin-bottom: 14px; }
+
 /* cart / checkout */
 .checkout { display: grid; gap: clamp(24px, 4vw, 48px); grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); padding: clamp(32px, 6vw, 64px) 0; align-items: start; }
 @media (max-width: 860px) { .checkout { grid-template-columns: 1fr; } }

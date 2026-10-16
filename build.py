@@ -20,8 +20,8 @@ LOGO = '91060cb46f'
 ART = '<div class="aurora"><span></span><span></span><span></span><span></span></div><div class="grid-lines"></div>'  # landing background
 
 PATHS = {
-    'sw': {'articles': 'makala', 'store': 'duka', 'cart': 'duka/kikapu', 'about': 'kuhusu'},
-    'en': {'articles': 'articles', 'store': 'store', 'cart': 'store/cart', 'about': 'about'},
+    'sw': {'articles': 'makala', 'store': 'duka', 'cart': 'duka/kikapu', 'about': 'kuhusu', 'thanks': 'duka/asante'},
+    'en': {'articles': 'articles', 'store': 'store', 'cart': 'store/cart', 'about': 'about', 'thanks': 'store/thank-you'},
 }
 
 T = {
@@ -63,6 +63,14 @@ T = {
         'couponNotFor': 'Msimbo huu hauhusiani na bidhaa zilizo kikapuni.', 'discount': 'Punguzo', 'subtotal': 'Jumla ndogo',
         'checking': 'Inakagua…', 'sending': 'Inatuma…', 'unavailable': 'Haipatikani kwa sasa',
         'haveCoupon': 'Una msimbo wa punguzo?',
+        'emailWhy': '(tutakutumia vitabu hapa)', 'payPesapal': 'Lipa sasa kwa Pesapal',
+        'pesapalNote': 'Kadi, M-Pesa, Mixx by Yas, Airtel Money na mengineyo — malipo salama kupitia Pesapal. Utapakua vitabu vyako papo hapo.',
+        'orManual': 'Au lipa moja kwa moja kwa simu na utume oda kwa WhatsApp',
+        'redirecting': 'Inakupeleka Pesapal…', 'payError': 'Imeshindikana kuanzisha malipo. Jaribu tena au lipa kwa simu hapa chini.',
+        'thanksTitle': 'Asante kwa <em>kununua</em>', 'checkingPay': 'Tunathibitisha malipo yako…',
+        'paidTitle': 'Malipo yamepokelewa!', 'paidText': 'Pakua vitabu vyako hapa chini. Viungo vinafanya kazi kwa siku 7.',
+        'emailSent': 'Nakala ya viungo imetumwa kwa', 'notYet': 'Bado hatujapokea uthibitisho wa malipo. Kama umeshalipa, subiri kidogo kisha bonyeza “Kagua tena”.',
+        'checkAgain': 'Kagua tena', 'needHelp': 'Unahitaji msaada? Tuandikie WhatsApp', 'download': 'Pakua',
         'cartTitle': 'Kikapu <em>chako</em>', 'emptyCart': 'Kikapu chako kiko tupu kwa sasa.', 'continue': 'Endelea kununua',
         'remove': 'Ondoa', 'total': 'Jumla', 'yourDetails': 'Taarifa zako', 'name': 'Jina', 'phone': 'Namba ya simu',
         'email': 'Barua pepe', 'optional': '(si lazima)', 'txn': 'Namba ya muamala',
@@ -123,6 +131,14 @@ T = {
         'couponNotFor': 'This code does not apply to the items in your cart.', 'discount': 'Discount', 'subtotal': 'Subtotal',
         'checking': 'Checking…', 'sending': 'Sending…', 'unavailable': 'Currently unavailable',
         'haveCoupon': 'Have a discount code?',
+        'emailWhy': '(we send your books here)', 'payPesapal': 'Pay now with Pesapal',
+        'pesapalNote': 'Card, M-Pesa, Mixx by Yas, Airtel Money and more — secure payment through Pesapal. Download your books instantly.',
+        'orManual': 'Or pay directly by mobile money and send the order on WhatsApp',
+        'redirecting': 'Taking you to Pesapal…', 'payError': 'Could not start the payment. Try again or pay by mobile money below.',
+        'thanksTitle': 'Thank you for your <em>order</em>', 'checkingPay': 'Confirming your payment…',
+        'paidTitle': 'Payment received!', 'paidText': 'Download your books below. Links work for 7 days.',
+        'emailSent': 'A copy of the links was sent to', 'notYet': 'We have not received payment confirmation yet. If you have paid, wait a moment and tap “Check again”.',
+        'checkAgain': 'Check again', 'needHelp': 'Need help? Message us on WhatsApp', 'download': 'Download',
         'cartTitle': 'Your <em>cart</em>', 'emptyCart': 'Your cart is empty for now.', 'continue': 'Continue shopping',
         'remove': 'Remove', 'total': 'Total', 'yourDetails': 'Your details', 'name': 'Name', 'phone': 'Phone number',
         'email': 'Email', 'optional': '(optional)', 'txn': 'Transaction ID',
@@ -252,7 +268,9 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
             'copied', 'play', 'free', 'inCart', 'added', 'viewCart', 'remove', 'total', 'name', 'phone', 'email',
             'txn', 'needDetails', 'waHello', 'waOrder', 'sellHello', 'product', 'couponOk', 'couponBad',
             'couponExpired', 'couponUsed', 'couponNotFor', 'discount', 'subtotal', 'coupon', 'checking', 'sending',
-            'unavailable')},
+            'unavailable', 'redirecting', 'payError', 'checkingPay', 'paidTitle', 'paidText', 'emailSent', 'notYet',
+            'checkAgain', 'download')},
+        'payments': SITE['paymentsUrl'],
         'fb': {'apiKey': SITE['firebase']['apiKey'], 'projectId': SITE['firebase']['projectId']},
     }
     if products_js:
@@ -659,9 +677,13 @@ def build_cart(lang):
         <h2>{t['yourDetails']}</h2>
         <div class="field"><label for="c-name">{t['name']}</label><input id="c-name" name="name" autocomplete="name" required></div>
         <div class="field"><label for="c-phone">{t['phone']}</label><input id="c-phone" name="phone" type="tel" autocomplete="tel" placeholder="07XX XXX XXX" required></div>
-        <div class="field"><label for="c-email">{t['email']} <span class="note">{t['optional']}</span></label><input id="c-email" name="email" type="email" autocomplete="email"></div>
+        <div class="field"><label for="c-email">{t['email']} <span class="note">{t['emailWhy']}</span></label><input id="c-email" name="email" type="email" autocomplete="email"></div>
         <div data-pay>
           <h2 style="margin-top:10px">{t['howToPay']}</h2>
+          <button class="btn btn-primary btn-block" type="button" data-pesapal>{ICON['bolt']} {t['payPesapal']}</button>
+          <p class="note" style="margin:8px 0 0">{t['pesapalNote']}</p>
+          <details class="alt-pay">
+          <summary>{t['orManual']}</summary>
           <ol class="steps">
             <li><div>{t['step1']}
               <div class="paybox"><span class="num">{e(pay['number'])}</span><span>{t['payName']}: <b>{e(pay['name'])}</b></span><div class="methods">{methods}</div>
@@ -670,10 +692,11 @@ def build_cart(lang):
             <li><div>{t['step3']}</div></li>
           </ol>
           <div class="field"><label for="c-txn">{t['txn']} <span class="note">{t['optional']}</span></label><input id="c-txn" name="txn" placeholder="e.g. 8GH3K2LQ"></div>
-        </div>
-        <div class="stack">
-          <button class="btn btn-wa btn-block" type="button" data-send-wa>{ICON['wa']} {t['sendOrderWa']}</button>
-          <button class="btn btn-line btn-block" type="button" data-send-mail>{ICON['mail']} {t['sendOrderMail']}</button>
+          <div class="stack">
+            <button class="btn btn-wa btn-block" type="button" data-send-wa>{ICON['wa']} {t['sendOrderWa']}</button>
+            <button class="btn btn-line btn-block" type="button" data-send-mail>{ICON['mail']} {t['sendOrderMail']}</button>
+          </div>
+          </details>
         </div>
         <p class="note">{t['privacy']}</p>
       </form>
@@ -683,6 +706,36 @@ def build_cart(lang):
     other = 'en' if lang == 'sw' else 'sw'
     write(rel, page(lang, rel, f"{strip_tags(t['cartTitle'])} · {t['siteText']}", body, active='store',
                     other_url=f"{other}/{PATHS[other]['cart']}/", products_js=True,
+                    extra_head='<meta name="robots" content="noindex">'))
+
+
+def build_thanks(lang):
+    """Pesapal sends buyers back here; the page confirms payment with the payments service and shows downloads."""
+    t, p = T[lang], PATHS[lang]
+    rel = f"{lang}/{p['thanks']}/"
+    root = '../../../'
+    body = f'''
+<div class="wrap" data-thanks>
+  <div class="about" style="max-width:40rem">
+    <span class="kicker">{t['store']}</span>
+    <h1>{t['thanksTitle']}</h1>
+    <div class="panel" data-state="checking"><p style="margin:0">{t['checkingPay']}</p></div>
+    <div class="panel" data-state="paid" hidden>
+      <h2>{t['paidTitle']}</h2>
+      <p class="muted" style="margin-top:0">{t['paidText']}</p>
+      <div class="stack" data-downloads></div>
+      <p class="note" data-email-note></p>
+    </div>
+    <div class="panel" data-state="pending" hidden>
+      <p style="margin-top:0">{t['notYet']}</p>
+      <button class="btn btn-primary" type="button" data-recheck>{t['checkAgain']}</button>
+    </div>
+    <p style="margin-top:24px"><a class="btn btn-wa" href="https://wa.me/{SITE['whatsapp']}" target="_blank" rel="noopener">{ICON['wa']} {t['needHelp']}</a></p>
+  </div>
+</div>'''
+    other = 'en' if lang == 'sw' else 'sw'
+    write(rel, page(lang, rel, f"{strip_tags(t['thanksTitle'])} · {t['siteText']}", body, active='store',
+                    other_url=f"{other}/{PATHS[other]['store']}/", products_js=True,
                     extra_head='<meta name="robots" content="noindex">'))
 
 
@@ -922,7 +975,7 @@ def build_admin():
     d = os.path.join(OUT, 'admin')
     os.makedirs(d, exist_ok=True)
     src = open(os.path.join(ROOT, 'src/admin/index.html'), encoding='utf-8').read()
-    cfg = dict(SITE['firebase'], superAdmin=SITE['superAdmin'], whatsapp=SITE['whatsapp'],
+    cfg = dict(SITE['firebase'], superAdmin=SITE['superAdmin'], whatsapp=SITE['whatsapp'], payments=SITE['paymentsUrl'],
                siteUrl=SITE['baseUrl'], rules=open(os.path.join(ROOT, 'firebase/store.rules')).read())
     src = src.replace('/*CONFIG*/', 'window.ADMIN_CONFIG = ' + json.dumps(cfg, ensure_ascii=False) + ';')
     src = src.replace('{{BUILD_ID}}', BUILD_ID)
@@ -945,6 +998,7 @@ def main():
             build_article(a, i)
         build_store(lang)
         build_cart(lang)
+        build_thanks(lang)
         build_about(lang)
     build_root()
     statics()

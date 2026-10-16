@@ -146,11 +146,15 @@ async function start() {
     s.forEach((d) => { live[d.id] = d.data(); });
     renderProducts();
   }, (err) => { permissionProblem(err); renderProducts(); }));
+  let firstLoad = true;
   unsubs.push(onSnapshot(query(collection(db, 'store_orders'), orderBy('createdAt', 'desc'), limit(1000)), (s) => {
     orders = s.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderOrders();
     renderOverview();
+    if (firstLoad) { firstLoad = false; syncPayments(); }
   }, (err) => { permissionProblem(err); renderOrders(); renderOverview(); }));
+  const timer = setInterval(syncPayments, 60000);
+  unsubs.push(() => clearInterval(timer));
   unsubs.push(onSnapshot(collection(db, 'store_coupons'), (s) => {
     coupons = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     renderCoupons();
@@ -162,6 +166,38 @@ async function start() {
         : '<li class="muted">No extra admins. Only you have access.</li>';
     }, permissionProblem));
   }
+}
+
+/* ---------------- Pesapal payments (Cloudflare payments service) ---------------- */
+async function payments(path) {
+  const token = await auth.currentUser.getIdToken();
+  const r = await fetch(CFG.payments + path, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw new Error('payments ' + r.status);
+  return r.json();
+}
+// Orders confirmed by Pesapal are stored by the payments service; copy them into Firestore as "paid".
+async function syncPayments() {
+  if (!CFG.payments || !auth.currentUser) return;
+  let res;
+  try { res = await payments('admin/sync'); } catch (err) { console.warn(err); return; }
+  let changed = 0;
+  for (const p of res.orders || []) {
+    const existing = orders.find((o) => o.id === p.ref);
+    const payment = { ...p.payment, merchantRef: p.merchantRef || '', trackingId: p.trackingId || '' };
+    if (existing && existing.payment && existing.payment.provider === 'pesapal') continue;
+    if (existing) {
+      if (!['pending', 'cancelled'].includes(existing.status)) continue;
+      await updateDoc(doc(db, 'store_orders', p.ref), { status: 'paid', total: p.amount, payment, channel: 'pesapal', updatedAt: serverTimestamp() });
+    } else {
+      await setDoc(doc(db, 'store_orders', p.ref), {
+        ref: p.ref, items: p.items, subtotal: p.subtotal, discount: p.discount || 0, couponCode: p.couponCode || null, total: p.amount,
+        currency: 'TZS', buyer: p.buyer, txn: '', lang: p.lang, status: 'paid', channel: 'pesapal', source: 'pesapal', payment,
+        createdAt: p.createdAt ? Timestamp.fromDate(new Date(p.createdAt)) : serverTimestamp(),
+      });
+    }
+    changed++;
+  }
+  if (changed) toast(`${changed} Pesapal payment${changed > 1 ? 's' : ''} received`);
 }
 
 /* ---------------- overview ---------------- */
@@ -225,6 +261,7 @@ function renderOrders() {
           ${o.buyer?.phone ? `<a href="tel:${esc(o.buyer.phone)}">${esc(o.buyer.phone)}</a>` : ''}
           ${o.buyer?.email ? `<br><a href="mailto:${esc(o.buyer.email)}">${esc(o.buyer.email)}</a>` : ''}</p>
         ${o.txn ? `<div class="meta">Txn: <b>${esc(o.txn)}</b></div>` : ''}
+        ${o.payment && o.payment.provider === 'pesapal' ? `<div class="meta">Pesapal · ${esc(o.payment.method)} · <b>${esc(o.payment.confirmation)}</b>${o.buyer?.email ? ' · books emailed automatically' : ''}</div>` : ''}
       </div>
       <div>
         <ul>${(o.items || []).map((it) => `<li>${esc(it.title || title(it.id))} — ${money(it.price)}</li>`).join('')}</ul>
@@ -268,14 +305,22 @@ $('#orders').addEventListener('click', async (e) => {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
   }
   if (e.target.matches('[data-send]')) {
+    const win = window.open('', '_blank');   // opened now so pop-up blockers allow it
+    let signed = {};
+    try {
+      const ids = (o.items || []).map((it) => it.id).join(',');
+      const res = await payments(`admin/links?ref=${encodeURIComponent(o.ref)}&items=${encodeURIComponent(ids)}`);
+      (res.links || []).forEach((l) => { signed[l.id] = l.url; });
+    } catch (err) { console.warn(err); }
     const links = (o.items || []).map((it) => {
-      const url = live[it.id]?.deliveryUrl;
+      const url = signed[it.id] || live[it.id]?.deliveryUrl;
       return `• ${it.title || title(it.id)}: ${url || '(attach the PDF)'}`;
     });
     const msg = (sw
       ? [`Habari ${o.buyer?.name}! Asante kwa kununua. Malipo ya oda ${o.ref} yamepokelewa.`, '', 'Pakua vitabu vyako hapa:', ...links, '', 'Mungu akubariki! — Makala Maalum']
       : [`Hello ${o.buyer?.name}! Thank you for your purchase. Payment for order ${o.ref} has been received.`, '', 'Download your books here:', ...links, '', 'God bless you! — Featured Articles']).join('\n');
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+    const wa = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+    if (win) win.location = wa; else window.open(wa, '_blank');
     if (o.status !== 'delivered') {
       await updateDoc(doc(db, 'store_orders', o.id), { status: 'delivered', updatedAt: serverTimestamp() });
       toast('Marked as delivered');
@@ -316,7 +361,7 @@ $('#orderForm').addEventListener('submit', async (e) => {
   const ids = $$('#orderProducts input:checked').map((i) => i.value);
   if (!ids.length) { toast('Choose at least one book'); return; }
   const d = new Date();
-  const ref = 'MM-' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const ref = 'MM-' + String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '-' + Array.from(crypto.getRandomValues(new Uint8Array(5)), (v) => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[v % 32]).join('');
   const items = ids.map((id) => ({ id, title: title(id), price: currentPrice(id) }));
   const subtotal = items.reduce((s, i) => s + i.price, 0);
   const total = Number(f.total.value) || 0;
@@ -348,7 +393,7 @@ function renderProducts() {
         <label class="lbl">Price (TSh)<input class="in" name="price" type="number" min="0" step="100" value="${price}"></label>
         <label class="lbl">Sale price (blank = none)<input class="in" name="salePrice" type="number" min="0" step="100" value="${typeof o.salePrice === 'number' ? o.salePrice : ''}"></label>
       </div>
-      <label class="lbl">Delivery link (PDF on Google Drive, Dropbox…)<input class="in" name="deliveryUrl" type="url" placeholder="https://drive.google.com/…" value="${esc(o.deliveryUrl || '')}"></label>
+      <label class="lbl">Fallback delivery link (optional)<input class="in" name="deliveryUrl" type="url" placeholder="https://drive.google.com/…" value="${esc(o.deliveryUrl || '')}"></label>
       <div class="row-actions" style="justify-content:space-between;align-items:center">
         <label class="switch"><input type="checkbox" name="active" ${o.active === false ? '' : 'checked'}> Shown in store</label>
         <div class="row-actions"><a class="btn btn-line btn-sm" href="${esc(p.url)}" target="_blank" rel="noopener">View</a><button class="btn btn-primary btn-sm" type="submit">Save</button></div>

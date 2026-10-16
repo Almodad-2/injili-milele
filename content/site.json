@@ -21,5 +21,6 @@
     "authDomain": "imani-za-msingi-ios.firebaseapp.com",
     "projectId": "imani-za-msingi-ios"
   },
-  "superAdmin": "modaofpeace@gmail.com"
+  "superAdmin": "modaofpeace@gmail.com",
+  "paymentsUrl": "https://makala-payments.modaofpeace.workers.dev/"
 }

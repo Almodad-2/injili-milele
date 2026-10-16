@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "makala-payments",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "kv_namespaces": [
+    {
+      "binding": "STORE",
+      "id": "893fa32a5397421b94c60793f1de3a28"
+    }
+  ],
+  "vars": {
+    "SITE_URL": "https://almodad-2.github.io/makala-maalum/",
+    "WORKER_URL": "https://makala-payments.modaofpeace.workers.dev",
+    "ALLOWED_ORIGINS": "https://almodad-2.github.io,http://localhost:8765",
+    "PESAPAL_BASE": "https://pay.pesapal.com/v3",
+    "FIREBASE_PROJECT_ID": "imani-za-msingi-ios",
+    "FIREBASE_API_KEY": "AIzaSyBPX_N3bUz0yvEs-8oFLI1d3QReEfGH7kE",
+    "SUPER_ADMIN": "modaofpeace@gmail.com",
+    "ADMIN_EMAIL": "modaofhope@gmail.com",
+    "SENDER_EMAIL": "modaofhope@gmail.com"
+  }
+}

@@ -289,10 +289,17 @@
     var couponMsg = co.querySelector('[data-coupon-msg]');
     var coupon = null;   // { code, type, value, products }
 
+    var randomCode = function (n) {
+      var abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', out = '';
+      var buf = new Uint8Array(n);
+      (window.crypto || window.msCrypto).getRandomValues(buf);
+      for (var i = 0; i < n; i++) out += abc[buf[i] % abc.length];
+      return out;
+    };
     var newRef = function () {
       var d = new Date();
       return 'MM-' + String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '-' +
-        Math.random().toString(36).slice(2, 6).toUpperCase();
+        randomCode(5);
     };
     var ref = store.get('mm-ref', null) || newRef();
     var signature = function () { return cart.slice().sort().join(',') + '|' + (coupon ? coupon.code : ''); };
@@ -477,11 +484,81 @@
         return 'mailto:' + MM.email + '?subject=' + encodeURIComponent(T.waOrder + ' ' + ref) + '&body=' + encodeURIComponent(message());
       });
     });
+    /* Pesapal: save the order, ask the payments service for a payment page, go there. */
+    var pesaBtn = co.querySelector('[data-pesapal]');
+    if (pesaBtn) pesaBtn.addEventListener('click', function () {
+      if (!valid() || !MM.payments) return;
+      var f = form.elements;
+      var label = pesaBtn.innerHTML;
+      pesaBtn.disabled = true;
+      pesaBtn.innerHTML = T.redirecting;
+      saveOrder('pesapal').then(function () {
+        return withTimeout(fetch(MM.payments + 'pay', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ref: ref, lang: MM.lang, items: cart.slice(), coupon: coupon ? coupon.code : '',
+            buyer: { name: f.name.value.trim(), phone: f.phone.value.trim(), email: f.email.value.trim() }
+          })
+        }), 20000);
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (!d.redirect_url) throw new Error(d.error || 'pay');
+        store.set('mm-pending', { ref: ref, at: Date.now() });
+        window.location.href = d.redirect_url;
+      }).catch(function () {
+        pesaBtn.disabled = false;
+        pesaBtn.innerHTML = label;
+        toast(T.payError, 6000);
+      });
+    });
+
     var copyBtn = co.querySelector('[data-copy-num]');
     if (copyBtn) copyBtn.addEventListener('click', function () {
       var n = copyBtn.getAttribute('data-copy-num');
       if (navigator.clipboard) navigator.clipboard.writeText(n).then(function () { toast('✓ ' + T.copied); });
     });
+  }
+
+  /* ---------- thank-you page (back from Pesapal) ---------- */
+  var ty = document.querySelector('[data-thanks]');
+  if (ty && MM.payments) {
+    var qp = new URLSearchParams(location.search);
+    var pref = qp.get('ref') || qp.get('OrderMerchantReference') || '';
+    var tid = qp.get('OrderTrackingId') || '';
+    var show = function (state) {
+      ty.querySelectorAll('[data-state]').forEach(function (el) { el.hidden = el.getAttribute('data-state') !== state; });
+    };
+    var tries = 0;
+    var check = function () {
+      show('checking');
+      fetch(MM.payments + 'status?ref=' + encodeURIComponent(pref) + '&OrderTrackingId=' + encodeURIComponent(tid))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.status === 'paid') {
+            var box = ty.querySelector('[data-downloads]');
+            box.innerHTML = '';
+            d.downloads.forEach(function (it) {
+              var a = document.createElement('a');
+              a.className = 'btn btn-primary btn-block';
+              a.href = it.url;
+              a.textContent = '⬇ ' + T.download + ': ' + it.title;
+              box.appendChild(a);
+            });
+            ty.querySelector('[data-email-note]').textContent = d.email ? T.emailSent + ' ' + d.email : '';
+            show('paid');
+            // Order complete: empty the cart and start a fresh reference next time.
+            cart = [];
+            saveCart();
+            ['mm-ref', 'mm-sent', 'mm-pending'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+          } else if (++tries < 20) {
+            setTimeout(check, 3000);
+          } else {
+            show('pending');
+          }
+        })
+        .catch(function () { if (++tries < 20) setTimeout(check, 3000); else show('pending'); });
+    };
+    ty.querySelector('[data-recheck]').addEventListener('click', function () { tries = 0; check(); });
+    check();
   }
 
   /* ---------- sell-with-us form ---------- */
