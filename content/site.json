@@ -7,8 +7,19 @@
   "payment": {
     "name": "Almodad Amos Yaragwiller",
     "number": "0718 834 621",
-    "methods": ["Mixx by Yas (Tigo Pesa)", "M-Pesa", "Airtel Money", "HaloPesa"]
+    "methods": [
+      "Mixx by Yas (Tigo Pesa)",
+      "M-Pesa",
+      "Airtel Money",
+      "HaloPesa"
+    ]
   },
   "currency": "TZS",
-  "youtube": "https://www.youtube.com/results?search_query=Pr.+Almodad+Amos"
+  "youtube": "https://www.youtube.com/results?search_query=Pr.+Almodad+Amos",
+  "firebase": {
+    "apiKey": "AIzaSyBPX_N3bUz0yvEs-8oFLI1d3QReEfGH7kE",
+    "authDomain": "imani-za-msingi-ios.firebaseapp.com",
+    "projectId": "imani-za-msingi-ios"
+  },
+  "superAdmin": "modaofpeace@gmail.com"
 }

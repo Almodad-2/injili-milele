@@ -53,3 +53,29 @@ Payment details and contacts live in `content/site.json`.
 - **Free products**: the PDF goes in `downloads/` and is published.
 - **Card / online payments**: add `"paymentUrl": "https://…"` (a Flutterwave, Selcom,
   Gumroad or Paystack payment link) to a product and a "Pay online now" button appears.
+
+## Admin dashboard (Firebase)
+
+**https://almodad-2.github.io/makala-maalum/admin/** (not linked from the site)
+
+The super admin is `modaofpeace@gmail.com`; it can add more admins in the *Admins* tab.
+The backend is the app's Firebase project (`imani-za-msingi-ios`):
+
+| Collection | Purpose |
+| --- | --- |
+| `store_products/{productId}` | live price, sale price, shown/hidden, delivery link |
+| `store_coupons/{CODE}` | discount codes (percent or fixed, expiry, max uses, books) |
+| `store_orders/{ref}` | orders sent from the cart (pending → paid → delivered) |
+| `store_admins/{email}` | extra admins (managed by the super admin) |
+
+Security rules for these collections are in `firebase/store.rules` (also shown in the
+dashboard's *Setup* tab). Paste that block into the project's Firestore rules, just
+before the last two closing braces, and publish. Existing app rules are not changed.
+
+Sign in with email + password. If the account only uses Google sign-in, use
+"send a password link" on the login page to create a password. To enable the Google
+button too, add `almodad-2.github.io` under Firebase Authentication → Settings →
+Authorized domains.
+
+Website prices still come from `content/products.json` as a fallback; values set in the
+dashboard override them live, with no rebuild needed.

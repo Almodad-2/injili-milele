@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Store Dashboard · Makala Maalum</title>
+<meta name="theme-color" content="#12172e">
+<link rel="icon" href="../assets/img/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="../assets/css/site.css?v={{BUILD_ID}}">
+<style>
+  body::before { display: none; }
+  .admin-top { background: var(--ink); color: #f3ecdd; }
+  .admin-top .wrap { display: flex; align-items: center; gap: 14px; height: 64px; }
+  .admin-top .brand-name { color: #f3ecdd; }
+  .admin-top .who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: .88rem; color: #cfc8b8; }
+  .admin-top .who button { color: #f3ecdd; border-color: rgba(255,255,255,.25); background: transparent; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 24px 0; scrollbar-width: none; }
+  .tabs button { border: 0; background: none; padding: 12px 16px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--gold); }
+  .tabs .count { background: var(--rose); color: #fff; font-size: .7rem; border-radius: 9px; padding: 1px 7px; }
+  .view[hidden] { display: none !important; }
+  .kpis { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 24px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
+  .kpi small { display: block; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .kpi b { font-family: var(--display); font-weight: 500; font-size: 1.8rem; letter-spacing: -.01em; }
+  .kpi.gold b { color: var(--gold); }
+  .two { display: grid; gap: 18px; grid-template-columns: 1.4fr 1fr; }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+  .chart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-top: 10px; }
+  .chart .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; }
+  .chart .bar i { display: block; width: 100%; max-width: 28px; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+  .chart .bar span { font-size: .62rem; color: var(--muted); }
+  .rank { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .rank li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .bar-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+  .bar-row .search { flex: 1 1 240px; }
+  .orders { display: grid; gap: 12px; }
+  .order { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; display: grid; gap: 12px; grid-template-columns: 1.1fr 1.3fr auto; align-items: start; }
+  @media (max-width: 900px) { .order { grid-template-columns: 1fr; } }
+  .order .ref { font-family: ui-monospace, Menlo, monospace; font-weight: 700; }
+  .order .meta { font-size: .82rem; color: var(--muted); }
+  .order ul { margin: 0; padding-left: 18px; font-size: .92rem; }
+  .order .money { font-family: var(--display); font-size: 1.3rem; font-weight: 600; }
+  .order .acts { display: grid; gap: 8px; min-width: 190px; }
+  .order textarea { width: 100%; font: inherit; font-size: .88rem; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--paper); color: var(--text); resize: vertical; }
+  .pill { display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; }
+  .st-pending { background: #fff1d6; color: #8a5a00; } .st-paid { background: #dbeafe; color: #1e40af; }
+  .st-delivered { background: #d9f5e3; color: #146c3a; } .st-cancelled { background: #f1e3e6; color: #8b2f42; }
+  select, .in { font: inherit; color: var(--text); background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%; }
+  .btn-sm { padding: 8px 14px; font-size: .88rem; }
+  .table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .table th, .table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: .92rem; }
+  .table th { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--paper-2); }
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .prod-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
+  .prod { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 12px; box-shadow: var(--shadow); }
+  .prod header { display: flex; gap: 14px; align-items: center; }
+  .prod header img { width: 64px; height: 64px; object-fit: cover; border-radius: 10px; }
+  .prod h3 { margin: 0; font-family: var(--display); font-weight: 500; font-size: 1.1rem; line-height: 1.25; }
+  .grid2 { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); display: grid; gap: 4px; }
+  .switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; cursor: pointer; }
+  .switch input { width: 18px; height: 18px; accent-color: var(--gold); }
+  .live { font-size: .78rem; color: #1f9d55; font-weight: 600; }
+  .login { max-width: 420px; margin: 8vh auto; }
+  .login h1 { font-family: var(--display); font-weight: 400; font-size: 2.4rem; margin: 6px 0 18px; }
+  .err { color: var(--rose); font-size: .9rem; min-height: 1.2em; }
+  .okmsg { color: #1f9d55; font-size: .9rem; }
+  .setup { background: #fff7e6; border: 1px solid #f0d49a; color: #5a4210; border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+  :root[data-theme="dark"] .setup { background: #2a2414; color: #f1dcae; border-color: #5a4a20; }
+  .setup pre { background: #12172e; color: #e7dfcd; padding: 14px; border-radius: 10px; overflow: auto; max-height: 280px; font-size: .78rem; }
+  .setup ol li { margin-bottom: 6px; }
+  .muted { color: var(--muted); }
+  .chk { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  .chk label { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; }
+  .empty-state { text-align: center; color: var(--muted); padding: 40px; font-family: var(--serif); font-style: italic; }
+  .row-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  dialog { border: 0; border-radius: var(--radius); padding: 0; max-width: 560px; width: calc(100% - 32px); background: var(--card); color: var(--text); box-shadow: var(--shadow-lg); }
+  dialog::backdrop { background: rgba(18, 23, 46, .55); }
+  dialog form { padding: 24px; display: grid; gap: 12px; }
+</style>
+<script>try{var th=localStorage.getItem('mm-theme');if(th)document.documentElement.setAttribute('data-theme',JSON.parse(th))}catch(e){}</script>
+<script>/*CONFIG*/</script>
+</head>
+<body>
+<header class="admin-top">
+  <div class="wrap">
+    <span class="brand"><img src="../assets/img/icon-192.png" alt="" width="32" height="32"><span class="brand-name">Store <em>Dashboard</em></span></span>
+    <div class="who" id="who" hidden><span id="whoEmail"></span><button class="btn btn-line btn-sm" id="signOut" type="button">Sign out</button></div>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <!-- Login -->
+  <section class="login panel" id="loginView" hidden>
+    <span class="kicker">Makala Maalum · Admin</span>
+    <h1>Sign in</h1>
+    <form id="loginForm" class="stack">
+      <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-gold btn-block" type="submit">Sign in</button>
+    </form>
+    <button class="btn btn-line btn-block" id="googleBtn" type="button" style="margin-top:10px">Sign in with Google</button>
+    <p class="note" style="margin-top:14px">No password yet, or forgot it? Enter your email above and <a href="#" id="resetLink">send a password link</a>.</p>
+    <p class="err" id="loginErr"></p>
+  </section>
+
+  <!-- Not allowed / needs verification -->
+  <section class="login panel" id="denyView" hidden>
+    <h1>No access</h1>
+    <p id="denyText" class="muted"></p>
+    <button class="btn btn-line" id="verifyBtn" type="button" hidden>Send verification email</button>
+    <p class="okmsg" id="verifyMsg"></p>
+  </section>
+
+  <!-- Dashboard -->
+  <section id="dash" hidden>
+    <nav class="tabs" role="tablist">
+      <button type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
+      <button type="button" role="tab" data-tab="orders">Orders <span class="count" id="pendingCount" hidden></span></button>
+      <button type="button" role="tab" data-tab="products">Prices &amp; Books</button>
+      <button type="button" role="tab" data-tab="coupons">Discount Codes</button>
+      <button type="button" role="tab" data-tab="admins" id="adminsTab" hidden>Admins</button>
+      <button type="button" role="tab" data-tab="setup">Setup</button>
+    </nav>
+
+    <div class="setup" id="rulesWarn" hidden>
+      <b>One step left: activate the store database.</b>
+      <p>Firestore is blocking the store collections because their security rules are not published yet. Open the <b>Setup</b> tab and follow the steps (about 2 minutes). Everything else is ready.</p>
+    </div>
+
+    <div class="view" data-view="overview">
+      <div class="kpis">
+        <div class="kpi gold"><small>Revenue (paid)</small><b id="kRevenue">—</b></div>
+        <div class="kpi"><small>This month</small><b id="kMonth">—</b></div>
+        <div class="kpi"><small>Pending orders</small><b id="kPending">—</b></div>
+        <div class="kpi"><small>Books sold</small><b id="kSold">—</b></div>
+        <div class="kpi"><small>Discounts given</small><b id="kDisc">—</b></div>
+      </div>
+      <div class="two">
+        <div class="panel"><h2>Paid sales · last 14 days</h2><div class="chart" id="chart"></div></div>
+        <div class="panel"><h2>Best sellers</h2><ul class="rank" id="rank"></ul></div>
+      </div>
+    </div>
+
+    <div class="view" data-view="orders" hidden>
+      <div class="bar-row">
+        <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="oSearch" placeholder="Search name, phone, reference, code…"></label>
+        <div class="chips" id="oFilter">
+          <button class="chip" type="button" data-f="all" aria-pressed="true">All</button>
+          <button class="chip" type="button" data-f="pending" aria-pressed="false">Pending</button>
+          <button class="chip" type="button" data-f="paid" aria-pressed="false">Paid</button>
+          <button class="chip" type="button" data-f="delivered" aria-pressed="false">Delivered</button>
+          <button class="chip" type="button" data-f="cancelled" aria-pressed="false">Cancelled</button>
+        </div>
+        <button class="btn btn-ink btn-sm" type="button" id="newOrderBtn">+ New order</button>
+        <button class="btn btn-line btn-sm" type="button" id="csvBtn">Export CSV</button>
+      </div>
+      <div class="orders" id="orders"></div>
+    </div>
+
+    <div class="view" data-view="products" hidden>
+      <p class="muted">Changes go live on the website immediately. Set a <b>sale price</b> to show a discount to everyone. Turn a book off to hide it from the store. The <b>delivery link</b> (e.g. a Google Drive link to the PDF) is used by the “Send books” button on orders.</p>
+      <div class="prod-grid" id="products"></div>
+    </div>
+
+    <div class="view" data-view="coupons" hidden>
+      <div class="two">
+        <form class="panel" id="couponForm">
+          <h2>New discount code</h2>
+          <div class="grid2">
+            <label class="lbl">Code<input class="in" name="code" required pattern="[A-Za-z0-9_-]{3,30}" placeholder="e.g. SABATO20" style="text-transform:uppercase"></label>
+            <label class="lbl">Type<select name="type"><option value="percent">Percent (%)</option><option value="fixed">Fixed amount (TSh)</option></select></label>
+            <label class="lbl">Value<input class="in" name="value" type="number" min="1" required placeholder="20"></label>
+            <label class="lbl">Max uses (0 = unlimited)<input class="in" name="maxUses" type="number" min="0" value="0"></label>
+            <label class="lbl">Expires (optional)<input class="in" name="expires" type="date"></label>
+            <label class="lbl">Note (optional)<input class="in" name="note" placeholder="e.g. Camp meeting 2026"></label>
+          </div>
+          <div class="lbl">Applies to (none ticked = all books)<div class="chk" id="couponProducts"></div></div>
+          <button class="btn btn-gold" type="submit">Create code</button>
+          <p class="err" id="couponErr"></p>
+        </form>
+        <div class="panel"><h2>How codes work</h2>
+          <p class="muted">Buyers type the code in the cart. The discount is shown before they pay, and the code is saved with the order so you can see who used it. Codes are not case-sensitive.</p>
+        </div>
+      </div>
+      <h2 style="font-family:var(--display);font-weight:500;margin-top:28px">All codes</h2>
+      <div class="table-wrap"><table class="table"><thead><tr><th>Code</th><th>Discount</th><th>Used</th><th>Expires</th><th>Books</th><th>Active</th><th></th></tr></thead><tbody id="coupons"></tbody></table></div>
+    </div>
+
+    <div class="view" data-view="admins" hidden>
+      <div class="two">
+        <form class="panel" id="adminForm">
+          <h2>Add an admin</h2>
+          <p class="muted">Admins can manage orders, prices and codes. Only you (super admin) can add or remove admins. They sign in here with that email.</p>
+          <div class="coupon-row"><input class="in" name="email" type="email" required placeholder="name@example.com"><button class="btn btn-gold" type="submit">Add</button></div>
+          <p class="err" id="adminErr"></p>
+        </form>
+        <div class="panel"><h2>Admins</h2><ul class="rank" id="admins"></ul></div>
+      </div>
+    </div>
+
+    <div class="view" data-view="setup" hidden>
+      <div class="setup">
+        <h2 style="margin-top:0">1 · Publish the store security rules</h2>
+        <ol>
+          <li>Open <a href="https://console.firebase.google.com/project/imani-za-msingi-ios/firestore/rules" target="_blank" rel="noopener">Firebase console → Firestore → Rules</a>.</li>
+          <li>Click <b>Copy rules</b> below, then paste them on a new line <b>just before the last two closing braces</b> <code>}</code> <code>}</code> of your existing rules. Do not remove anything else.</li>
+          <li>Click <b>Publish</b>, then reload this page.</li>
+        </ol>
+        <p><button class="btn btn-ink btn-sm" type="button" id="copyRules">Copy rules</button> <span class="okmsg" id="copyMsg"></span></p>
+        <pre id="rulesText"></pre>
+        <h2>2 · (Optional) Allow “Sign in with Google” here</h2>
+        <ol>
+          <li>Open <a href="https://console.firebase.google.com/project/imani-za-msingi-ios/authentication/settings" target="_blank" rel="noopener">Firebase console → Authentication → Settings → Authorized domains</a>.</li>
+          <li>Click <b>Add domain</b> and enter <code>almodad-2.github.io</code>.</li>
+        </ol>
+        <p class="muted">Email + password sign-in works without this step.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<dialog id="orderDialog">
+  <form method="dialog" id="orderForm">
+    <h2 style="margin:0;font-family:var(--display);font-weight:500">New order</h2>
+    <p class="muted" style="margin:0">For sales made by phone or in person.</p>
+    <div class="lbl">Books<div class="chk" id="orderProducts"></div></div>
+    <div class="grid2">
+      <label class="lbl">Buyer name<input class="in" name="name" required></label>
+      <label class="lbl">Phone<input class="in" name="phone"></label>
+      <label class="lbl">Total paid (TSh)<input class="in" name="total" type="number" min="0" required></label>
+      <label class="lbl">Status<select name="status"><option value="paid">Paid</option><option value="delivered">Delivered</option><option value="pending">Pending</option></select></label>
+    </div>
+    <label class="lbl">Note<input class="in" name="note"></label>
+    <div class="row-actions"><button class="btn btn-gold" value="save" type="submit">Save order</button><button class="btn btn-line" value="cancel" formnovalidate type="submit">Cancel</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status"></div>
+<script type="module" src="admin.js?v={{BUILD_ID}}"></script>
+</body>
+</html>

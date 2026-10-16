@@ -58,6 +58,11 @@ T = {
         'sellText': 'Waandishi, wahubiri na wanamuziki wa Injili wanakaribishwa kuuza bidhaa zao za kidijitali hapa. Tuma maelezo nasi tutawasiliana nawe.',
         'product': 'Bidhaa', 'aboutProduct': 'Maelezo mafupi', 'sendWa': 'Tuma kwa WhatsApp',
         'sellHello': 'Habari! Ningependa kuuza bidhaa yangu kwenye duka la Makala Maalum.',
+        'coupon': 'Msimbo wa punguzo', 'apply': 'Tumia', 'couponOk': 'Punguzo limetumika!', 'couponBad': 'Msimbo huu si sahihi.',
+        'couponExpired': 'Msimbo huu umekwisha muda wake.', 'couponUsed': 'Msimbo huu umeshatumika mara zote zilizoruhusiwa.',
+        'couponNotFor': 'Msimbo huu hauhusiani na bidhaa zilizo kikapuni.', 'discount': 'Punguzo', 'subtotal': 'Jumla ndogo',
+        'checking': 'Inakagua…', 'sending': 'Inatuma…', 'unavailable': 'Haipatikani kwa sasa',
+        'haveCoupon': 'Una msimbo wa punguzo?',
         'cartTitle': 'Kikapu <em>chako</em>', 'emptyCart': 'Kikapu chako kiko tupu kwa sasa.', 'continue': 'Endelea kununua',
         'remove': 'Ondoa', 'total': 'Jumla', 'yourDetails': 'Taarifa zako', 'name': 'Jina', 'phone': 'Namba ya simu',
         'email': 'Barua pepe', 'optional': '(si lazima)', 'txn': 'Namba ya muamala',
@@ -113,6 +118,11 @@ T = {
         'sellText': 'Authors, preachers and Gospel musicians are welcome to sell their digital products here. Send us the details and we will get in touch.',
         'product': 'Product', 'aboutProduct': 'Short description', 'sendWa': 'Send on WhatsApp',
         'sellHello': 'Hello! I would like to sell my product in the Featured Articles store.',
+        'coupon': 'Discount code', 'apply': 'Apply', 'couponOk': 'Discount applied!', 'couponBad': 'This code is not valid.',
+        'couponExpired': 'This code has expired.', 'couponUsed': 'This code has reached its usage limit.',
+        'couponNotFor': 'This code does not apply to the items in your cart.', 'discount': 'Discount', 'subtotal': 'Subtotal',
+        'checking': 'Checking…', 'sending': 'Sending…', 'unavailable': 'Currently unavailable',
+        'haveCoupon': 'Have a discount code?',
         'cartTitle': 'Your <em>cart</em>', 'emptyCart': 'Your cart is empty for now.', 'continue': 'Continue shopping',
         'remove': 'Remove', 'total': 'Total', 'yourDetails': 'Your details', 'name': 'Name', 'phone': 'Phone number',
         'email': 'Email', 'optional': '(optional)', 'txn': 'Transaction ID',
@@ -219,8 +229,10 @@ def cover(p, lang, root):
 
 def price_html(p, lang):
     if not p['price']:
-        return f'<span class="price free">{T[lang]["free"]}</span>'
-    return f'<span class="price"><small>TSh</small>{p["price"]:,}</span>'
+        inner = f'<span class="price free">{T[lang]["free"]}</span>'
+    else:
+        inner = f'<span class="price"><small>TSh</small>{p["price"]:,}</span>'
+    return f'<span class="price-slot" data-price-of="{p["id"]}">{inner}</span>'
 
 
 def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=None, extra_head='', products_js=False, body_class=''):
@@ -238,7 +250,10 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
         'whatsapp': SITE['whatsapp'], 'email': SITE['email'],
         't': {k: v for k, v in t.items() if isinstance(v, str) and k in (
             'copied', 'play', 'free', 'inCart', 'added', 'viewCart', 'remove', 'total', 'name', 'phone', 'email',
-            'txn', 'needDetails', 'waHello', 'waOrder', 'sellHello', 'product')},
+            'txn', 'needDetails', 'waHello', 'waOrder', 'sellHello', 'product', 'couponOk', 'couponBad',
+            'couponExpired', 'couponUsed', 'couponNotFor', 'discount', 'subtotal', 'coupon', 'checking', 'sending',
+            'unavailable')},
+        'fb': {'apiKey': SITE['firebase']['apiKey'], 'projectId': SITE['firebase']['projectId']},
     }
     if products_js:
         mm['products'] = {
@@ -507,7 +522,7 @@ def build_store(lang):
     for x in PRODUCTS:
         btn = (f'<button class="btn btn-gold add" type="button" data-buy="{x["id"]}">{ICON["down"]} {t["getFree"]}</button>' if x.get('free')
                else f'<button class="btn btn-ink add" type="button" data-add="{x["id"]}">{t["addToCart"]}</button>')
-        items.append(f'''<article class="product reveal">
+        items.append(f'''<article class="product reveal" data-product="{x['id']}">
   <a class="cover-link" href="{root}{prod_path(lang, x)}">{cover(x, lang, root)}</a>
   <div class="card-meta"><span class="cat">PDF</span><span class="badge">{T[lang]['langBadge'][x['lang']]}</span></div>
   <h3><a href="{root}{prod_path(lang, x)}">{e(x['title'][lang])}</a></h3>
@@ -576,7 +591,7 @@ def build_product(lang, x):
       <div class="card-meta rise"><span class="cat">PDF · {T[lang]['langBadge'][x['lang']]}</span></div>
       <h1 class="rise d1">{e(x['title'][lang])}</h1>
       <p class="lead rise d2">{e(x['description'][lang])}</p>
-      <div class="buybox rise d3">
+      <div class="buybox rise d3" data-buybox="{x['id']}">
         {price_html(x, lang)}
         {actions}
         <span class="note">{t['format']}</span>
@@ -609,7 +624,16 @@ def build_cart(lang):
     <div class="stack">
       <div class="panel">
         <div data-lines></div>
+        <div class="subtotals" data-subtotals hidden>
+          <div><span>{t['subtotal']}</span><span data-subtotal></span></div>
+          <div class="disc"><span>{t['discount']} <b data-coupon-label></b></span><span data-discount></span></div>
+        </div>
         <div class="totals"><span>{t['total']}</span><span class="price" data-total></span></div>
+        <form class="coupon" data-coupon-form>
+          <label for="c-coupon">{t['haveCoupon']}</label>
+          <div class="coupon-row"><input id="c-coupon" name="coupon" autocomplete="off" autocapitalize="characters" placeholder="{t['coupon']}"><button class="btn btn-line" type="submit">{t['apply']}</button></div>
+          <p class="coupon-msg" data-coupon-msg role="status"></p>
+        </form>
       </div>
       <div class="panel" data-free hidden>
         <p style="margin-top:0">{t['freeReady']}</p>
@@ -754,6 +778,10 @@ def statics():
     if os.path.isdir(dl):
         shutil.copytree(dl, os.path.join(OUT, 'downloads'), dirs_exist_ok=True)
     open(os.path.join(OUT, '.nojekyll'), 'w').close()
+    os.makedirs(os.path.join(OUT, 'data'), exist_ok=True)
+    json.dump([dict(p, url={l: SITE['baseUrl'] + prod_path(l, p) for l in ('sw', 'en')}) for p in PRODUCTS],
+              open(os.path.join(OUT, 'data/products.json'), 'w'), ensure_ascii=False, indent=1)
+    build_admin()
     json.dump({
         'name': 'Makala Maalum · Featured Articles', 'short_name': 'Makala Maalum',
         'start_url': './', 'display': 'standalone', 'background_color': '#12172e', 'theme_color': '#12172e',
@@ -868,6 +896,19 @@ body {{ font-family: Literata, Georgia, serif; font-size: 10.5pt; line-height: 1
                        check=True, capture_output=True, timeout=180)
         print('pdf', os.path.relpath(dest, ROOT), os.path.getsize(dest) // 1024, 'KB')
     shutil.rmtree(tmp, ignore_errors=True)
+
+
+def build_admin():
+    """Admin dashboard: a standalone page (Firebase Auth + Firestore), not linked from the site."""
+    d = os.path.join(OUT, 'admin')
+    os.makedirs(d, exist_ok=True)
+    src = open(os.path.join(ROOT, 'src/admin/index.html'), encoding='utf-8').read()
+    cfg = dict(SITE['firebase'], superAdmin=SITE['superAdmin'], whatsapp=SITE['whatsapp'],
+               siteUrl=SITE['baseUrl'], rules=open(os.path.join(ROOT, 'firebase/store.rules')).read())
+    src = src.replace('/*CONFIG*/', 'window.ADMIN_CONFIG = ' + json.dumps(cfg, ensure_ascii=False) + ';')
+    src = src.replace('{{BUILD_ID}}', BUILD_ID)
+    open(os.path.join(d, 'index.html'), 'w', encoding='utf-8').write(src)
+    shutil.copy(os.path.join(ROOT, 'src/admin/admin.js'), os.path.join(d, 'admin.js'))
 
 
 BUILD_ID = datetime.datetime.now().strftime('%Y%m%d%H%M')

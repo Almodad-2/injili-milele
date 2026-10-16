@@ -150,12 +150,94 @@
 
   /* =================== STORE =================== */
   var PRODUCTS = MM.products || {};
-  var cart = store.get('mm-cart', []).filter(function (id) { return PRODUCTS[id]; });
-  function saveCart() { store.set('mm-cart', cart); renderBadge(); }
+
+  /* ---------- Firestore (REST, no SDK) ---------- */
+  var FB = MM.fb;
+  var DB = FB ? 'projects/' + FB.projectId + '/databases/(default)/documents' : null;
+  var API = 'https://firestore.googleapis.com/v1/';
+  function toFs(v) {
+    if (v === null || v === undefined) return { nullValue: null };
+    if (typeof v === 'boolean') return { booleanValue: v };
+    if (typeof v === 'number') return Number.isInteger(v) ? { integerValue: String(v) } : { doubleValue: v };
+    if (typeof v === 'string') return { stringValue: v };
+    if (Array.isArray(v)) return { arrayValue: { values: v.map(toFs) } };
+    var f = {};
+    Object.keys(v).forEach(function (k) { f[k] = toFs(v[k]); });
+    return { mapValue: { fields: f } };
+  }
+  function fromFs(x) {
+    if ('stringValue' in x) return x.stringValue;
+    if ('integerValue' in x) return Number(x.integerValue);
+    if ('doubleValue' in x) return x.doubleValue;
+    if ('booleanValue' in x) return x.booleanValue;
+    if ('timestampValue' in x) return new Date(x.timestampValue);
+    if ('arrayValue' in x) return (x.arrayValue.values || []).map(fromFs);
+    if ('mapValue' in x) return docData(x.mapValue);
+    return null;
+  }
+  function docData(d) {
+    var o = {};
+    var f = d.fields || {};
+    Object.keys(f).forEach(function (k) { o[k] = fromFs(f[k]); });
+    return o;
+  }
+  function withTimeout(p, ms) {
+    return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]);
+  }
+  function fsGet(path) {
+    return withTimeout(fetch(API + DB + '/' + path + '?key=' + FB.apiKey), 8000).then(function (r) {
+      if (r.status === 404) return null;
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+  }
+
   function money(n) {
     if (!n) return T.free;
     return 'TSh ' + n.toLocaleString('en-US');
   }
+  function priceHtml(p) {
+    if (!p.price) return '<span class="price free">' + T.free + '</span>';
+    var h = '<span class="price"><small>TSh</small>' + p.price.toLocaleString('en-US') + '</span>';
+    if (p.was && p.was > p.price) {
+      h += '<s>' + p.was.toLocaleString('en-US') + '</s><span class="sale-tag">−' + Math.round(100 - p.price * 100 / p.was) + '%</span>';
+    }
+    return h;
+  }
+
+  /* Live prices / sale prices / visibility set by the admin dashboard. */
+  var livePrices = FB ? fsGet('store_products?pageSize=200').then(function (res) {
+    (res && res.documents || []).forEach(function (d) {
+      var id = d.name.split('/').pop();
+      var o = docData(d);
+      var p = PRODUCTS[id];
+      if (!p) return;
+      if (typeof o.price === 'number') p.price = o.price;
+      p.was = null;
+      if (typeof o.salePrice === 'number' && o.salePrice >= 0 && o.salePrice < p.price) {
+        p.was = p.price;
+        p.price = o.salePrice;
+      }
+      p.active = o.active !== false;
+    });
+    Object.keys(PRODUCTS).forEach(function (id) {
+      var p = PRODUCTS[id];
+      document.querySelectorAll('[data-price-of="' + id + '"]').forEach(function (el) { el.innerHTML = priceHtml(p); });
+      if (p.active === false) {
+        document.querySelectorAll('[data-product="' + id + '"]').forEach(function (el) { el.hidden = true; });
+        document.querySelectorAll('[data-buybox="' + id + '"]').forEach(function (el) {
+          el.querySelectorAll('button, a.btn').forEach(function (b) { b.remove(); });
+          var n = document.createElement('p');
+          n.className = 'unavailable';
+          n.textContent = T.unavailable;
+          el.insertBefore(n, el.querySelector('.note'));
+        });
+      }
+    });
+  }).catch(function () { /* rules not deployed yet or offline: keep static prices */ }) : Promise.resolve();
+
+  var cart = store.get('mm-cart', []).filter(function (id) { return PRODUCTS[id]; });
+  function saveCart() { store.set('mm-cart', cart); renderBadge(); }
   function renderBadge() {
     document.querySelectorAll('.cart-count').forEach(function (b) {
       b.textContent = cart.length;
@@ -194,31 +276,52 @@
   if (co) {
     var list = co.querySelector('[data-lines]');
     var totalEl = co.querySelector('[data-total]');
-    var form = co.querySelector('form');
+    var form = co.querySelector('form.panel');
     var payPanel = co.querySelector('[data-pay]');
     var emptyEl = co.querySelector('[data-empty]');
     var filled = co.querySelector('[data-filled]');
-    var ref = store.get('mm-ref', null);
-    if (!ref) {
-      var d = new Date();
-      ref = 'MM-' + String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '-' +
-        Math.random().toString(36).slice(2, 6).toUpperCase();
-      store.set('mm-ref', ref);
-    }
-    co.querySelectorAll('[data-ref]').forEach(function (e) { e.textContent = ref; });
+    var couponForm = co.querySelector('[data-coupon-form]');
+    var couponMsg = co.querySelector('[data-coupon-msg]');
+    var coupon = null;   // { code, type, value, products }
 
-    var total = function () { return cart.reduce(function (s, id) { return s + (PRODUCTS[id].price || 0); }, 0); };
+    var newRef = function () {
+      var d = new Date();
+      return 'MM-' + String(d.getFullYear()).slice(2) + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '-' +
+        Math.random().toString(36).slice(2, 6).toUpperCase();
+    };
+    var ref = store.get('mm-ref', null) || newRef();
+    var signature = function () { return cart.slice().sort().join(',') + '|' + (coupon ? coupon.code : ''); };
+    var lastSent = store.get('mm-sent', null);
+    // An order already saved under this reference with different contents needs a new reference.
+    var ensureRef = function () {
+      if (lastSent && lastSent.ref === ref && lastSent.sig !== signature()) {
+        ref = newRef();
+        lastSent = null;
+      }
+      store.set('mm-ref', ref);
+      co.querySelectorAll('[data-ref]').forEach(function (e) { e.textContent = ref; });
+    };
+
+    var subtotal = function () { return cart.reduce(function (s, id) { return s + (PRODUCTS[id].price || 0); }, 0); };
+    var discount = function () {
+      if (!coupon) return 0;
+      var eligible = cart.filter(function (id) { return !coupon.products || !coupon.products.length || coupon.products.indexOf(id) !== -1; })
+        .reduce(function (s, id) { return s + (PRODUCTS[id].price || 0); }, 0);
+      var d = coupon.type === 'fixed' ? coupon.value : Math.round(eligible * coupon.value / 100);
+      return Math.max(0, Math.min(d, eligible));
+    };
+    var total = function () { return subtotal() - discount(); };
+
     var render = function () {
       list.innerHTML = '';
       cart.forEach(function (id) {
         var p = PRODUCTS[id];
         var row = document.createElement('div');
         row.className = 'line-item';
-        row.innerHTML = p.coverHtml + '<div><b></b><small></small><br><button class="rm" type="button">' + T.remove + '</button></div><div class="price"></div>';
+        row.innerHTML = p.coverHtml + '<div><b></b><small></small><br><button class="rm" type="button">' + T.remove + '</button></div><div class="price-slot"></div>';
         row.querySelector('b').textContent = p.title;
         row.querySelector('small').textContent = p.subtitle;
-        row.querySelector('.price').textContent = money(p.price);
-        if (!p.price) row.querySelector('.price').classList.add('free');
+        row.querySelector('.price-slot').innerHTML = priceHtml(p);
         row.querySelector('.rm').addEventListener('click', function () {
           cart.splice(cart.indexOf(id), 1);
           saveCart();
@@ -226,12 +329,18 @@
         });
         list.appendChild(row);
       });
+      var disc = discount();
+      co.querySelector('[data-subtotals]').hidden = !disc;
+      co.querySelector('[data-subtotal]').textContent = money(subtotal());
+      co.querySelector('[data-discount]').textContent = '− ' + money(disc);
+      co.querySelector('[data-coupon-label]').textContent = coupon ? '(' + coupon.code + ')' : '';
       totalEl.textContent = money(total());
       var has = cart.length > 0;
       emptyEl.hidden = has;
       filled.hidden = !has;
+      couponForm.hidden = subtotal() === 0;
       // free-only orders can be downloaded right away
-      var free = cart.filter(function (id) { return !PRODUCTS[id].price; });
+      var free = cart.filter(function (id) { return !PRODUCTS[id].price && PRODUCTS[id].download; });
       var freeBox = co.querySelector('[data-free]');
       if (freeBox) {
         freeBox.hidden = free.length === 0;
@@ -246,8 +355,40 @@
         });
       }
       payPanel.hidden = total() === 0;
+      ensureRef();
     };
     render();
+    livePrices.then(render);
+
+    var setMsg = function (text, ok) {
+      couponMsg.textContent = text;
+      couponMsg.className = 'coupon-msg ' + (ok ? 'ok' : 'bad');
+    };
+    couponForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = couponForm.elements.coupon.value.trim().toUpperCase().replace(/\s+/g, '');
+      if (!code) return;
+      if (!FB) { setMsg(T.couponBad, false); return; }
+      setMsg(T.checking, true);
+      fsGet('store_coupons/' + encodeURIComponent(code)).then(function (doc) {
+        if (!doc) throw new Error('missing');
+        var c = docData(doc);
+        if (c.active === false) throw new Error('missing');
+        if (c.expiresAt && c.expiresAt < new Date()) { coupon = null; render(); return setMsg(T.couponExpired, false); }
+        if (c.maxUses && (c.uses || 0) >= c.maxUses) { coupon = null; render(); return setMsg(T.couponUsed, false); }
+        var products = c.products || [];
+        if (products.length && !cart.some(function (id) { return products.indexOf(id) !== -1; })) {
+          coupon = null; render(); return setMsg(T.couponNotFor, false);
+        }
+        coupon = { code: code, type: c.type === 'fixed' ? 'fixed' : 'percent', value: Number(c.value) || 0, products: products };
+        render();
+        setMsg(T.couponOk + ' −' + money(discount()), true);
+      }).catch(function () {
+        coupon = null;
+        render();
+        setMsg(T.couponBad, false);
+      });
+    });
 
     var saved = store.get('mm-buyer', {});
     ['name', 'phone', 'email'].forEach(function (k) { if (saved[k] && form.elements[k]) form.elements[k].value = saved[k]; });
@@ -256,6 +397,10 @@
       var f = form.elements;
       var lines = [T.waHello, '', T.waOrder + ' ' + ref];
       cart.forEach(function (id) { lines.push('• ' + PRODUCTS[id].title + ' — ' + money(PRODUCTS[id].price)); });
+      if (discount()) {
+        lines.push('', T.subtotal + ': ' + money(subtotal()));
+        lines.push(T.discount + ' (' + coupon.code + '): −' + money(discount()));
+      }
       lines.push('', T.total + ': ' + money(total()));
       lines.push('', T.name + ': ' + f.name.value.trim());
       lines.push(T.phone + ': ' + f.phone.value.trim());
@@ -273,13 +418,59 @@
       }
       return true;
     };
-    co.querySelector('[data-send-wa]').addEventListener('click', function () {
+
+    /* Save the order in Firestore (status "pending") so it shows in the admin dashboard.
+       The coupon's use counter goes up in the same atomic commit. */
+    var saveOrder = function (channel) {
+      ensureRef();
+      if (!FB || (lastSent && lastSent.ref === ref)) return Promise.resolve();
+      var f = form.elements;
+      var order = {
+        ref: ref,
+        items: cart.map(function (id) { return { id: id, title: PRODUCTS[id].title, price: PRODUCTS[id].price || 0 }; }),
+        subtotal: subtotal(), discount: discount(), couponCode: coupon ? coupon.code : null, total: total(),
+        currency: 'TZS', lang: MM.lang, status: 'pending', channel: channel, source: 'web',
+        buyer: { name: f.name.value.trim().slice(0, 120), phone: f.phone.value.trim().slice(0, 40), email: f.email.value.trim().slice(0, 120) },
+        txn: (f.txn && f.txn.value.trim().slice(0, 60)) || ''
+      };
+      var fields = toFs(order).mapValue.fields;
+      var writes = [{
+        update: { name: DB + '/store_orders/' + ref, fields: fields },
+        currentDocument: { exists: false },
+        updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }]
+      }];
+      if (coupon && discount()) {
+        writes.push({ transform: { document: DB + '/store_coupons/' + coupon.code, fieldTransforms: [{ fieldPath: 'uses', increment: { integerValue: '1' } }] } });
+      }
+      return withTimeout(fetch(API + DB + ':commit?key=' + FB.apiKey, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ writes: writes })
+      }), 8000).then(function (r) {
+        if (r.ok) {
+          lastSent = { ref: ref, sig: signature() };
+          store.set('mm-sent', lastSent);
+        }
+      }).catch(function () { /* still send by WhatsApp/email */ });
+    };
+    var send = function (btn, channel, url) {
       if (!valid()) return;
-      window.location.href = 'https://wa.me/' + MM.whatsapp + '?text=' + encodeURIComponent(message());
+      var label = btn.innerHTML;
+      btn.innerHTML = T.sending;
+      btn.disabled = true;
+      saveOrder(channel).then(function () {
+        btn.innerHTML = label;
+        btn.disabled = false;
+        window.location.href = url();
+      });
+    };
+    var waBtn = co.querySelector('[data-send-wa]');
+    waBtn.addEventListener('click', function () {
+      send(waBtn, 'whatsapp', function () { return 'https://wa.me/' + MM.whatsapp + '?text=' + encodeURIComponent(message()); });
     });
-    co.querySelector('[data-send-mail]').addEventListener('click', function () {
-      if (!valid()) return;
-      window.location.href = 'mailto:' + MM.email + '?subject=' + encodeURIComponent(T.waOrder + ' ' + ref) + '&body=' + encodeURIComponent(message());
+    var mailBtn = co.querySelector('[data-send-mail]');
+    mailBtn.addEventListener('click', function () {
+      send(mailBtn, 'email', function () {
+        return 'mailto:' + MM.email + '?subject=' + encodeURIComponent(T.waOrder + ' ' + ref) + '&body=' + encodeURIComponent(message());
+      });
     });
     var copyBtn = co.querySelector('[data-copy-num]');
     if (copyBtn) copyBtn.addEventListener('click', function () {

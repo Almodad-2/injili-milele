@@ -1,0 +1,57 @@
+    // ==================== MAKALA MAALUM STORE ====================
+    // Paste this block inside `match /databases/{database}/documents { ... }`
+    // (just before its closing brace). It only covers the new store_*
+    // collections and does not change any existing rule.
+    function isSuperAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'modaofpeace@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+    function isStoreAdmin() {
+      return isSuperAdmin() || (request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/store_admins/$(request.auth.token.email)));
+    }
+
+    // Prices, discounts and visibility of each book (read by the website).
+    match /store_products/{productId} {
+      allow read: if true;
+      allow write: if isStoreAdmin();
+    }
+
+    // Discount codes: anyone can check one code by name, only admins can list them.
+    match /store_coupons/{code} {
+      allow get: if true;
+      allow list, create, delete: if isStoreAdmin();
+      allow update: if isStoreAdmin() || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses'])
+        && request.resource.data.uses == resource.data.uses + 1
+        && resource.data.active == true
+        && (resource.data.maxUses == 0 || resource.data.uses < resource.data.maxUses)
+        && (resource.data.expiresAt == null || request.time < resource.data.expiresAt)
+      );
+    }
+
+    // Orders: buyers can only create a pending order; admins manage them.
+    match /store_orders/{orderId} {
+      allow create: if isStoreAdmin() || (
+        request.resource.data.keys().hasOnly(['ref', 'items', 'subtotal', 'discount', 'couponCode',
+          'total', 'currency', 'buyer', 'txn', 'lang', 'status', 'channel', 'createdAt', 'source'])
+        && request.resource.data.ref == orderId
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 20
+        && request.resource.data.total is number && request.resource.data.total >= 0
+        && request.resource.data.buyer.name is string
+        && request.resource.data.buyer.name.size() > 0 && request.resource.data.buyer.name.size() <= 120
+        && request.resource.data.buyer.phone is string && request.resource.data.buyer.phone.size() <= 40
+      );
+      allow read, update, delete: if isStoreAdmin();
+    }
+
+    // Extra store admins, managed by the super admin only. Document id = email.
+    match /store_admins/{email} {
+      allow read: if isStoreAdmin();
+      allow write: if isSuperAdmin();
+    }
