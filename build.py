@@ -234,7 +234,7 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
     url = SITE['baseUrl'] + rel
     img = SITE['baseUrl'] + f'assets/img/{image or LOGO}.jpg'
     mm = {
-        'lang': lang, 'root': root, 'cartUrl': root + p['cart'] + '/',
+        'lang': lang, 'root': root, 'cartUrl': root + lang + '/' + p['cart'] + '/',
         'whatsapp': SITE['whatsapp'], 'email': SITE['email'],
         't': {k: v for k, v in t.items() if isinstance(v, str) and k in (
             'copied', 'play', 'free', 'inCart', 'added', 'viewCart', 'remove', 'total', 'name', 'phone', 'email',
@@ -294,7 +294,7 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
       {nav('store', p['store'] and lang + '/' + p['store'] + '/', t['store'], 'store')}
       <a class="lang-switch" href="{root}{other_url}" hreflang="{other}" title="{t['otherName']}">{t['other']}</a>
       <button class="icon-btn" type="button" data-theme-toggle aria-label="{t['theme']}">{ICON['moon']}</button>
-      <a class="icon-btn" href="{root}{p['cart']}/" aria-label="{t['cart']}">{ICON['bag']}<span class="cart-count">0</span></a>
+      <a class="icon-btn" href="{root}{lang}/{p['cart']}/" aria-label="{t['cart']}">{ICON['bag']}<span class="cart-count">0</span></a>
     </nav>
   </div>
 </header>
@@ -526,7 +526,7 @@ def build_store(lang):
 <section class="section">
   <div class="wrap">
     <div class="section-head"><div><span class="kicker">{t['store']} · {len(PRODUCTS)}</span><h2>{t['products']}</h2></div>
-      <a class="btn btn-line" href="{root}{p['cart']}/">{ICON['bag']} {t['cart']}</a></div>
+      <a class="btn btn-line" href="{root}{lang}/{p['cart']}/">{ICON['bag']} {t['cart']}</a></div>
     <div class="products">{''.join(items)}</div>
   </div>
 </section>
