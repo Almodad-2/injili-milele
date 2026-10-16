@@ -1,13 +1,15 @@
-// Makala Maalum payments — Cloudflare Worker between the website, Pesapal (API 3.0) and the admin dashboard.
+// Injili Milele payments — Cloudflare Worker between the website, Pesapal (API 3.0) and the admin dashboard.
 //
 //   POST /pay           buyer starts a Pesapal payment (server recomputes the price)
 //   GET  /ipn           Pesapal payment notification (verified with GetTransactionStatus)
 //   GET  /status        thank-you page polls; returns download links once paid
-//   GET  /dl/:token     signed, expiring PDF download (files live in KV, never public)
+//   GET  /read/:id      the reader's copy: full file when free, the free preview when priced (402 if preview is off)
+//   GET  /dl/:token     signed, expiring download of a bought file (files live in KV, never public)
 //   GET  /admin/sync    paid orders for the dashboard (Firebase ID token of an admin required)
 //   GET  /admin/links   fresh download links for an order (admin)
 //
-// KV keys (binding STORE):  order:<ref>  ·  pesa:<merchantRef> -> ref  ·  paid:<ref>  ·  pdf:<productId>  ·  cfg:ipn
+// KV keys (binding STORE):  order:<ref>  ·  pesa:<merchantRef> -> ref  ·  paid:<ref>  ·  cfg:ipn
+//                           pdf:<productId> (full file, metadata.type = content type)  ·  preview:<productId>
 
 const LINK_DAYS = 7;
 const enc = new TextEncoder();
@@ -22,10 +24,11 @@ export default {
       if (url.pathname === '/pay' && req.method === 'POST') res = await pay(req, env, url);
       else if (url.pathname === '/ipn') res = await ipn(url, env, ctx);
       else if (url.pathname === '/status') res = await status(url, env, ctx);
-      else if (url.pathname.startsWith('/dl/')) return await download(url, env);
+      else if (url.pathname.startsWith('/dl/')) return await download(req, url, env);
+      else if (url.pathname.startsWith('/read/')) res = await read(req, url, env);
       else if (url.pathname === '/admin/sync') res = await adminSync(req, env);
       else if (url.pathname === '/admin/links') res = await adminLinks(req, url, env);
-      else if (url.pathname === '/') res = json({ ok: true, service: 'makala-payments' });
+      else if (url.pathname === '/') res = json({ ok: true, service: 'injili-milele-payments' });
       else res = json({ error: 'not_found' }, 404);
       for (const [k, v] of Object.entries(cors)) res.headers.set(k, v);
       return res;
@@ -46,7 +49,8 @@ function corsHeaders(req, env) {
   return {
     'Access-Control-Allow-Origin': allowed.includes(origin) ? origin : allowed[0],
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Range',
+    'Access-Control-Expose-Headers': 'X-Access, Content-Range, Content-Length',
     'Vary': 'Origin',
   };
 }
@@ -82,12 +86,15 @@ async function fsGet(env, path, idToken) {
   return r.json();
 }
 
-/* Catalogue = website defaults + live overrides from the admin dashboard. */
-async function catalogue(env) {
+/* Catalogue = website defaults + live overrides from the admin dashboard.
+   Kept for 30 s per isolate so the reader does not query Firestore on every page view. */
+let catCache = null;
+async function catalogue(env, fresh) {
+  if (!fresh && catCache && Date.now() - catCache.at < 30000) return catCache.data;
   const base = await (await fetch(env.SITE_URL + 'data/products.json', { cf: { cacheTtl: 60 } })).json();
   let live = {};
   try {
-    const res = await fsGet(env, 'store_products?pageSize=200');
+    const res = await fsGet(env, 'store_products?pageSize=300');
     for (const d of (res && res.documents) || []) live[d.name.split('/').pop()] = fsFields(d.fields);
   } catch (e) { live = {}; }
   const out = {};
@@ -95,9 +102,48 @@ async function catalogue(env) {
     const o = live[p.id] || {};
     let price = typeof o.price === 'number' ? o.price : p.price;
     if (typeof o.salePrice === 'number' && o.salePrice >= 0 && o.salePrice < price) price = o.salePrice;
-    out[p.id] = { id: p.id, lang: p.lang, title: p.title, price, active: o.active !== false, free: !!p.free, pdf: p.pdf };
+    out[p.id] = {
+      id: p.id, lang: p.lang, title: p.title, price, active: o.active !== false, kind: p.kind || 'bundle',
+      preview: typeof o.preview === 'boolean' ? o.preview : p.preview !== false,
+    };
   }
+  catCache = { at: Date.now(), data: out };
   return out;
+}
+
+/* Serve a KV file, honouring Range requests (audio seeking, pdf.js). */
+function fileResponse(req, file, meta, extra) {
+  const type = (meta && meta.type) || 'application/pdf';
+  const size = file.byteLength;
+  const headers = { 'Content-Type': type, 'Accept-Ranges': 'bytes', ...extra };
+  const m = /^bytes=(\d*)-(\d*)$/.exec(req.headers.get('Range') || '');
+  if (m && (m[1] || m[2])) {
+    let start = m[1] ? Number(m[1]) : Math.max(0, size - Number(m[2]));
+    let end = m[1] && m[2] ? Math.min(Number(m[2]), size - 1) : size - 1;
+    if (start > end || start >= size) return new Response(null, { status: 416, headers: { ...headers, 'Content-Range': `bytes */${size}` } });
+    return new Response(file.slice(start, end + 1), { status: 206, headers: { ...headers, 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': String(end - start + 1) } });
+  }
+  return new Response(file, { headers: { ...headers, 'Content-Length': String(size) } });
+}
+const fileName = (title, type) => (title || 'injili-milele').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + (type && type.startsWith('audio/') ? '.mp3' : '.pdf');
+
+/* ------------------------------------------------------------------ GET /read/:id */
+async function read(req, url, env) {
+  const id = decodeURIComponent(url.pathname.slice(6));
+  const p = (await catalogue(env))[id];
+  if (!p || !p.active) return json({ error: 'not_found' }, 404);
+  let key, access;
+  if (!p.price) { key = 'pdf:' + id; access = 'full'; }
+  else if (p.preview && p.kind !== 'audio') { key = 'preview:' + id; access = 'preview'; }
+  else return json({ error: 'locked', price: p.price }, 402);
+  const { value, metadata } = await env.STORE.getWithMetadata(key, 'arrayBuffer');
+  if (!value) return json({ error: 'not_uploaded' }, 404);
+  const dl = url.searchParams.get('dl') === '1' && access === 'full';
+  return fileResponse(req, value, metadata, {
+    'X-Access': access,
+    'Cache-Control': 'public, max-age=60',
+    'Content-Disposition': `${dl ? 'attachment' : 'inline'}; filename="${fileName(p.title, metadata && metadata.type)}"`,
+  });
 }
 
 /* ------------------------------------------------------------------ Pesapal */
@@ -138,7 +184,7 @@ async function pay(req, env, url) {
   const buyer = { name: clean(body.buyer?.name, 120), phone: clean(body.buyer?.phone, 40), email: clean(body.buyer?.email, 120) };
   if (!buyer.name || !(buyer.phone || buyer.email)) return json({ error: 'buyer_details' }, 400);
 
-  const cat = await catalogue(env);
+  const cat = await catalogue(env, true);
   const ids = [...new Set((body.items || []).map(String))].filter((id) => cat[id] && cat[id].active && cat[id].lang === lang && cat[id].price > 0);
   if (!ids.length) return json({ error: 'no_items' }, 400);
   const items = ids.map((id) => ({ id, title: cat[id].title, price: cat[id].price }));
@@ -174,7 +220,7 @@ async function pay(req, env, url) {
     id: merchantRef,
     currency: 'TZS',
     amount,
-    description: clean((lang === 'en' ? 'Featured Articles order ' : 'Oda ya Makala Maalum ') + ref, 100),
+    description: clean((lang === 'en' ? 'Injili Milele order ' : 'Oda ya Injili Milele ') + ref, 100),
     callback_url: thanks,
     notification_id,
     billing_address: {
@@ -257,17 +303,17 @@ async function links(env, order, origin) {
   }
   return out;
 }
-async function download(url, env) {
+async function download(req, url, env) {
   const [payload, sig] = url.pathname.slice(4).split('.');
   if (!payload || !sig || sig !== (await hmac(env, payload))) return new Response('Invalid link', { status: 403 });
   const [ref, id, exp] = new TextDecoder().decode(fromB64url(payload)).split('|');
   if (Number(exp) < Date.now() / 1000) return new Response('This download link has expired. Please contact us on WhatsApp for a new one.', { status: 410 });
   const order = await env.STORE.get('order:' + ref, 'json');
   if (!order || order.status !== 'paid' || !order.items.some((i) => i.id === id)) return new Response('Not available', { status: 403 });
-  const file = await env.STORE.get('pdf:' + id, 'arrayBuffer');
-  if (!file) return new Response('File not uploaded yet. Please contact us on WhatsApp.', { status: 404 });
-  const name = (order.items.find((i) => i.id === id).title || id).replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.pdf';
-  return new Response(file, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'private, no-store' } });
+  const { value, metadata } = await env.STORE.getWithMetadata('pdf:' + id, 'arrayBuffer');
+  if (!value) return new Response('File not uploaded yet. Please contact us on WhatsApp.', { status: 404 });
+  const name = fileName(order.items.find((i) => i.id === id).title || id, metadata && metadata.type);
+  return fileResponse(req, value, metadata, { 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'private, no-store' });
 }
 
 /* ------------------------------------------------------------------ email (Brevo) */
@@ -279,7 +325,7 @@ async function sendEmails(env, order) {
   const send = (to, subject, html) => fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'api-key': env.BREVO_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ sender: { name: sw ? 'Makala Maalum' : 'Featured Articles', email: env.SENDER_EMAIL }, to: [to], subject, htmlContent: html }),
+    body: JSON.stringify({ sender: { name: 'Injili Milele', email: env.SENDER_EMAIL }, to: [to], subject, htmlContent: html }),
   }).then(async (r) => { if (!r.ok) console.error('brevo', r.status, await r.text()); });
   const wrap = (inner) => `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#172018;line-height:1.6">${inner}<p style="color:#5b6270;font-size:13px;margin-top:28px">Injili Milele · ${env.SITE_URL}</p></div>`;
   if (order.buyer.email) {
@@ -336,7 +382,7 @@ async function adminLinks(req, url, env) {
   // Orders paid by mobile money (outside Pesapal) can also get download links once the admin marks them paid.
   if (!order || order.status !== 'paid') {
     const items = String(url.searchParams.get('items') || '').split(',').filter(Boolean);
-    const cat = await catalogue(env);
+    const cat = await catalogue(env, true);
     const chosen = items.filter((id) => cat[id]).map((id) => ({ id, title: cat[id].title, price: cat[id].price }));
     order = { ...(order || {}), ref, status: 'paid', manual: true, items: chosen.length ? chosen : (order && order.items) || [] };
     await env.STORE.put('order:' + ref, JSON.stringify(order));

@@ -1,4 +1,4 @@
-/* Makala Maalum — site behaviour (no dependencies). window.MM is injected per page. */
+/* Injili Milele — site behaviour. window.MM is injected per page. pdf.js is loaded on demand for the PDF reader. */
 (function () {
   'use strict';
   var MM = window.MM || { lang: 'sw', t: {}, root: './' };
@@ -124,31 +124,36 @@
   if (grid) {
     var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
     var input = document.querySelector('[data-search]');
-    var chips = document.querySelectorAll('.chip');
     var empty = document.querySelector('.empty');
-    var cat = 'all';
+    var cat = 'all', fmt = 'all';
     var fold = function (s) { return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
     var apply = function () {
       var q = fold(input ? input.value.trim() : '');
       var shown = 0;
       cards.forEach(function (c) {
         var ok = (cat === 'all' || c.getAttribute('data-cat') === cat) &&
+          (fmt === 'all' || (' ' + c.getAttribute('data-format') + ' ').indexOf(' ' + fmt + ' ') !== -1) &&
           (!q || fold(c.getAttribute('data-search')).indexOf(q) !== -1);
         c.hidden = !ok;
         if (ok) shown++;
-        c.classList.toggle('feature', ok && !q && cat === 'all' && c === cards[0]);
+        c.classList.toggle('feature', ok && !q && cat === 'all' && fmt === 'all' && c === cards[0]);
       });
       if (empty) empty.style.display = shown ? 'none' : 'block';
     };
     if (input) input.addEventListener('input', apply);
-    chips.forEach(function (ch) {
-      ch.addEventListener('click', function () {
-        chips.forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
-        ch.setAttribute('aria-pressed', 'true');
-        cat = ch.getAttribute('data-filter');
-        apply();
+    var group = function (sel, set) {
+      var list = document.querySelectorAll(sel);
+      list.forEach(function (ch) {
+        ch.addEventListener('click', function () {
+          list.forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+          ch.setAttribute('aria-pressed', 'true');
+          set(ch);
+          apply();
+        });
       });
-    });
+    };
+    group('.chips.cats .chip', function (ch) { cat = ch.getAttribute('data-filter'); });
+    group('.chips.formats .chip', function (ch) { fmt = ch.getAttribute('data-format-filter'); });
     var qs = new URLSearchParams(location.search).get('q');
     if (qs && input) { input.value = qs; apply(); }
   }
@@ -210,14 +215,32 @@
     return h;
   }
 
+  /* free -> read & download; preview -> buy, read the first pages; locked -> buy only */
+  function accessOf(p) { return !p.price ? 'free' : (p.preview === false ? 'locked' : 'preview'); }
+  function applyAccess(id) {
+    var p = PRODUCTS[id];
+    if (!p) return;
+    var a = accessOf(p);
+    document.querySelectorAll('[data-doc="' + id + '"], [data-reader="' + id + '"]').forEach(function (el) {
+      if (el.getAttribute('data-access') !== a) {
+        el.setAttribute('data-access', a);
+        el.dispatchEvent(new CustomEvent('access'));
+      }
+    });
+    document.querySelectorAll('[data-when-free="' + id + '"]').forEach(function (el) { el.hidden = a !== 'free'; });
+    document.querySelectorAll('[data-when-paid="' + id + '"]').forEach(function (el) { el.hidden = a === 'free'; });
+  }
+  Object.keys(PRODUCTS).forEach(applyAccess);
+
   /* Live prices / sale prices / visibility set by the admin dashboard. */
-  var livePrices = FB ? fsGet('store_products?pageSize=200').then(function (res) {
+  var livePrices = FB ? fsGet('store_products?pageSize=300').then(function (res) {
     (res && res.documents || []).forEach(function (d) {
       var id = d.name.split('/').pop();
       var o = docData(d);
       var p = PRODUCTS[id];
       if (!p) return;
       if (typeof o.price === 'number') p.price = o.price;
+      if (typeof o.preview === 'boolean') p.preview = o.preview;
       p.was = null;
       if (typeof o.salePrice === 'number' && o.salePrice >= 0 && o.salePrice < p.price) {
         p.was = p.price;
@@ -228,6 +251,7 @@
     Object.keys(PRODUCTS).forEach(function (id) {
       var p = PRODUCTS[id];
       document.querySelectorAll('[data-price-of="' + id + '"]').forEach(function (el) { el.innerHTML = priceHtml(p); });
+      applyAccess(id);
       if (p.active === false) {
         document.querySelectorAll('[data-product="' + id + '"]').forEach(function (el) { el.hidden = true; });
         document.querySelectorAll('[data-buybox="' + id + '"]').forEach(function (el) {
@@ -560,5 +584,152 @@
     ty.querySelector('[data-recheck]').addEventListener('click', function () { tries = 0; check(); });
     check();
   }
+
+  /* =================== PDF READER =================== */
+  var PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+  var pdfjsReady = null;
+  function loadPdfJs() {
+    if (!pdfjsReady) {
+      pdfjsReady = new Promise(function (res, rej) {
+        var s = document.createElement('script');
+        s.src = PDFJS + 'pdf.min.js';
+        s.onload = function () { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(window.pdfjsLib); };
+        s.onerror = function () { pdfjsReady = null; rej(new Error('pdf.js')); };
+        document.head.appendChild(s);
+      });
+    }
+    return pdfjsReady;
+  }
+
+  document.querySelectorAll('[data-reader]').forEach(function (rd) {
+    var pagesEl = rd.querySelector('[data-pages]');
+    var stateEl = rd.querySelector('[data-reader-state]');
+    var infoEl = rd.querySelector('[data-pageinfo]');
+    var endEl = rd.querySelector('[data-preview-end]');
+    var lockEl = rd.querySelector('[data-locked]');
+    var loadedAs = null, busy = false, pdf = null;
+    var setState = function (html) { stateEl.innerHTML = html; };
+
+    var renderPage = function (box) {
+      if (!pdf || box._done) return;
+      box._done = true;
+      pdf.getPage(Number(box.getAttribute('data-n'))).then(function (page) {
+        var w = box.clientWidth;
+        var v1 = page.getViewport({ scale: 1 });
+        var ratio = Math.min(window.devicePixelRatio || 1, 2.5);
+        var vp = page.getViewport({ scale: (w / v1.width) * ratio });
+        var c = document.createElement('canvas');
+        c.width = Math.floor(vp.width);
+        c.height = Math.floor(vp.height);
+        return page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise.then(function () {
+          box.innerHTML = '';
+          box.appendChild(c);
+          box.classList.add('ready');
+        });
+      }).catch(function () { box._done = false; });
+    };
+    var lazy = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+      es.forEach(function (en) { if (en.isIntersecting) renderPage(en.target); });
+    }, { rootMargin: '900px 0px' }) : null;
+    var current = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) {
+      es.forEach(function (en) {
+        if (en.isIntersecting && pdf) infoEl.textContent = T.page + ' ' + en.target.getAttribute('data-n') + ' / ' + pdf.numPages;
+      });
+    }, { rootMargin: '-45% 0px -45% 0px' }) : null;
+
+    var load = function () {
+      var access = rd.getAttribute('data-access');
+      if (access === 'locked') {
+        loadedAs = 'locked';
+        pagesEl.innerHTML = '';
+        endEl.hidden = true;
+        lockEl.hidden = false;
+        setState(T.fullPdf);
+        return;
+      }
+      if (busy || loadedAs === access) return;
+      busy = true;
+      lockEl.hidden = true;
+      setState('<span class="spin"></span>' + T.loadingPdf);
+      var got;
+      loadPdfJs().then(function () {
+        return withTimeout(fetch(rd.getAttribute('data-src'), { cache: 'no-store' }), 30000);
+      }).then(function (r) {
+        if (r.status === 402) { got = 'locked'; return null; }
+        if (!r.ok) throw new Error('http ' + r.status);
+        got = r.headers.get('X-Access') || (access === 'free' ? 'full' : 'preview');
+        return r.arrayBuffer();
+      }).then(function (buf) {
+        if (!buf) return null;
+        return window.pdfjsLib.getDocument({ data: new Uint8Array(buf) }).promise;
+      }).then(function (doc) {
+        busy = false;
+        if (!doc) { rd.setAttribute('data-access', 'locked'); load(); return; }
+        pdf = doc;
+        loadedAs = access;
+        return doc.getPage(1).then(function (p1) {
+          var v = p1.getViewport({ scale: 1 });
+          pagesEl.innerHTML = '';
+          for (var n = 1; n <= doc.numPages; n++) {
+            var box = document.createElement('div');
+            box.className = 'pg';
+            box.setAttribute('data-n', n);
+            box.style.aspectRatio = v.width + ' / ' + v.height;
+            pagesEl.appendChild(box);
+            if (lazy) lazy.observe(box); else renderPage(box);
+            if (current) current.observe(box);
+          }
+          var preview = got === 'preview';
+          endEl.hidden = !preview;
+          setState(preview ? '<b class="tag">' + T.previewNote + '</b>' : '<b class="tag ok">PDF</b> ' + T.pages.replace('{n}', doc.numPages));
+          infoEl.textContent = T.page + ' 1 / ' + doc.numPages;
+        });
+      }).catch(function () {
+        busy = false;
+        setState(T.pdfError + ' <button class="tool" type="button" data-retry>' + T.retry + '</button>');
+        var b = stateEl.querySelector('[data-retry]');
+        if (b) b.addEventListener('click', load);
+      });
+    };
+
+    // start when the reader comes near the screen; reload when the dashboard changes the access
+    if ('IntersectionObserver' in window) {
+      var near = new IntersectionObserver(function (es) {
+        if (es.some(function (en) { return en.isIntersecting; })) { near.disconnect(); livePrices.then(load); }
+      }, { rootMargin: '600px 0px' });
+      near.observe(rd);
+    } else {
+      livePrices.then(load);
+    }
+    rd.addEventListener('access', function () { if (loadedAs) { loadedAs = null; pdf = null; load(); } });
+
+    var resizeT;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(function () {
+        pagesEl.querySelectorAll('.pg.ready').forEach(function (b) { b._done = false; b.classList.remove('ready'); renderPage(b); });
+      }, 400);
+    });
+    var fs = rd.querySelector('[data-fs]');
+    if (fs) fs.addEventListener('click', function () {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (rd.requestFullscreen) rd.requestFullscreen();
+      else rd.scrollIntoView();
+    });
+  });
+
+  /* ---------- audio: only free items get a source; paid audio is bought and downloaded ---------- */
+  document.querySelectorAll('[data-audio]').forEach(function (box) {
+    var id = box.getAttribute('data-audio');
+    var au = box.querySelector('audio');
+    var set = function () {
+      var p = PRODUCTS[id];
+      var free = !p || !p.price;
+      au.hidden = !free;
+      if (free && !au.getAttribute('src')) au.src = au.getAttribute('data-src');
+    };
+    set();
+    livePrices.then(set);
+  });
 
 })();

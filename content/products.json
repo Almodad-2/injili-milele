@@ -9,10 +9,10 @@
     "articles": "sw:*",
     "image": "1363d76253",
     "title": "Makala Maalum: Mkusanyiko Kamili",
-    "subtitle": "Makala zote 8 katika kitabu kimoja cha PDF",
-    "description": "Kitabu pepe (PDF) kilichopangwa vizuri chenye makala zote za Makala Maalum: Sabato, Sanduku la Agano, Uungu wa Kristo, Pambano Kuu, Kalenda ya Gregory, Ibada na Milenia. Kinafaa kwa kujisomea, vikundi vya kujifunza Biblia na kuchapisha.",
+    "subtitle": "Makala zote {n} katika kitabu kimoja cha PDF",
+    "description": "Kitabu pepe (PDF) kilichopangwa vizuri chenye makala zote za Injili Milele katika kitabu kimoja: Sabato, Sanduku la Agano, Uungu wa Kristo, Pambano Kuu, Kalenda ya Gregory, Ibada na Milenia. Kinafaa kwa kujisomea, vikundi vya kujifunza Biblia na kuchapisha.",
     "includes": [
-      "Makala 8 kamili",
+      "Makala {n} kamili",
       "Kurasa za kuchapishwa (A5)",
       "Yaliyomo yenye viungo",
       "Masasisho ya bure"
@@ -38,25 +38,6 @@
     "pair": "sabbath-study"
   },
   {
-    "id": "milenia-bure",
-    "lang": "sw",
-    "type": "free",
-    "price": 0,
-    "pdf": "milenia-mambo-8",
-    "free": true,
-    "articles": "sw:milenia-mambo-muhimu-8",
-    "image": "fe039240e9",
-    "title": "Milenia: Mambo 8 (Bure)",
-    "subtitle": "Zawadi ya bure kwa ajili yako",
-    "description": "Pakua bure makala ya Milenia katika PDF nzuri ya kuchapisha. Shiriki na marafiki zako!",
-    "includes": [
-      "Makala kamili ya Milenia",
-      "PDF ya kuchapisha",
-      "Bure kabisa"
-    ],
-    "pair": "millennium"
-  },
-  {
     "id": "featured-articles-collection",
     "lang": "en",
     "type": "ebook",
@@ -66,10 +47,10 @@
     "articles": "en:*",
     "image": "64d044e642",
     "title": "Featured Articles: The Complete Collection",
-    "subtitle": "All 6 articles in one PDF book",
+    "subtitle": "All {n} articles in one PDF book",
     "description": "Every English Featured Article gathered into one elegant PDF e-book: the Ark of the Covenant, the meaning of “begotten”, why God created Lucifer, the Gregorian calendar and the Sabbath, kneeling in prayer and the Millennium.",
     "includes": [
-      "6 complete articles",
+      "{n} complete articles",
       "Print-ready A5 pages",
       "Linked table of contents",
       "Free updates"
@@ -92,25 +73,6 @@
       "The complete article",
       "Discussion questions",
       "Print-ready A5 pages"
-    ]
-  },
-  {
-    "id": "millennium-free",
-    "lang": "en",
-    "type": "free",
-    "price": 0,
-    "free": true,
-    "pdf": "millennium-8-insights",
-    "pair": "millennium",
-    "articles": "en:the-millennium-8-key-insights",
-    "image": "7aab5c2a2b",
-    "title": "The Millennium: 8 Insights (Free)",
-    "subtitle": "A free gift for you",
-    "description": "Download the Millennium article free as a beautiful, printable PDF. Share it with your friends!",
-    "includes": [
-      "The complete Millennium article",
-      "Printable PDF",
-      "Completely free"
     ]
   }
 ]

@@ -1,4 +1,4 @@
-// Makala Maalum — store dashboard (Firebase Auth + Firestore).
+// Injili Milele — store dashboard (Firebase Auth + Firestore).
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider,
@@ -317,8 +317,8 @@ $('#orders').addEventListener('click', async (e) => {
       return `• ${it.title || title(it.id)}: ${url || '(attach the PDF)'}`;
     });
     const msg = (sw
-      ? [`Habari ${o.buyer?.name}! Asante kwa kununua. Malipo ya oda ${o.ref} yamepokelewa.`, '', 'Pakua vitabu vyako hapa:', ...links, '', 'Mungu akubariki! — Makala Maalum']
-      : [`Hello ${o.buyer?.name}! Thank you for your purchase. Payment for order ${o.ref} has been received.`, '', 'Download your books here:', ...links, '', 'God bless you! — Featured Articles']).join('\n');
+      ? [`Habari ${o.buyer?.name}! Asante kwa kununua. Malipo ya oda ${o.ref} yamepokelewa.`, '', 'Pakua vitabu vyako hapa:', ...links, '', 'Mungu akubariki! — Injili Milele']
+      : [`Hello ${o.buyer?.name}! Thank you for your purchase. Payment for order ${o.ref} has been received.`, '', 'Download your books here:', ...links, '', 'God bless you! — Injili Milele']).join('\n');
     const wa = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     if (win) win.location = wa; else window.open(wa, '_blank');
     if (o.status !== 'delivered') {
@@ -381,26 +381,46 @@ function currentPrice(id) {
   const base = typeof o.price === 'number' ? o.price : p.price;
   return typeof o.salePrice === 'number' && o.salePrice < base ? o.salePrice : base;
 }
+let prodKind = 'all';
+let prodQuery = '';
+const KIND_LABEL = { bundle: 'Collection', article: 'Article', book: 'Book', audio: 'Audio' };
 function renderProducts() {
-  $('#products').innerHTML = catalog.map((p) => {
+  const list = catalog.filter((p) => {
+    const kind = p.kind || 'bundle';
+    const okKind = prodKind === 'all' || (prodKind === 'singles' ? ['article', 'book'].includes(kind) : kind === prodKind);
+    const q = prodQuery.toLowerCase();
+    return okKind && (!q || (p.title + ' ' + (p.category || '') + ' ' + p.id).toLowerCase().includes(q));
+  });
+  $('#products').innerHTML = list.map((p) => {
     const o = live[p.id] || {};
     const price = typeof o.price === 'number' ? o.price : p.price;
+    const preview = typeof o.preview === 'boolean' ? o.preview : p.preview !== false;
+    const kind = p.kind || 'bundle';
     return `<form class="prod" data-id="${esc(p.id)}">
       <header><img src="../assets/img/${esc(p.image)}.jpg" alt=""><div><h3>${esc(p.title)}</h3>
-        <div class="meta muted">${p.lang === 'sw' ? 'Kiswahili store' : 'English store'}</div>
+        <div class="meta muted">${KIND_LABEL[kind] || kind} · ${p.lang === 'sw' ? 'Kiswahili' : 'English'}${p.pages ? ' · ' + p.pages + ' pages' : ''}</div>
         ${live[p.id] ? '<span class="live">● Live settings</span>' : '<span class="muted" style="font-size:.78rem">Using website default</span>'}</div></header>
       <div class="grid2">
-        <label class="lbl">Price (TSh)<input class="in" name="price" type="number" min="0" step="100" value="${price}"></label>
+        <label class="lbl">Price (TSh, 0 = free)<input class="in" name="price" type="number" min="0" step="100" value="${price}"></label>
         <label class="lbl">Sale price (blank = none)<input class="in" name="salePrice" type="number" min="0" step="100" value="${typeof o.salePrice === 'number' ? o.salePrice : ''}"></label>
       </div>
-      <label class="lbl">Fallback delivery link (optional)<input class="in" name="deliveryUrl" type="url" placeholder="https://drive.google.com/…" value="${esc(o.deliveryUrl || '')}"></label>
-      <div class="row-actions" style="justify-content:space-between;align-items:center">
-        <label class="switch"><input type="checkbox" name="active" ${o.active === false ? '' : 'checked'}> Shown in store</label>
+      ${kind === 'bundle' ? `<label class="lbl">Fallback delivery link (optional)<input class="in" name="deliveryUrl" type="url" placeholder="https://drive.google.com/…" value="${esc(o.deliveryUrl || '')}"></label>` : ''}
+      <div class="row-actions" style="justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+        <div style="display:grid;gap:6px">
+          <label class="switch"><input type="checkbox" name="active" ${o.active === false ? '' : 'checked'}> Shown on the website</label>
+          ${kind === 'audio' ? '' : `<label class="switch" title="When the price is above 0, readers can still read the first pages free"><input type="checkbox" name="preview" ${preview ? 'checked' : ''}> Free preview of first pages</label>`}
+        </div>
         <div class="row-actions"><a class="btn btn-line btn-sm" href="${esc(p.url)}" target="_blank" rel="noopener">View</a><button class="btn btn-primary btn-sm" type="submit">Save</button></div>
       </div>
     </form>`;
-  }).join('');
+  }).join('') || '<p class="muted">No items match.</p>';
 }
+$$('[data-prod-kind]').forEach((b) => b.addEventListener('click', () => {
+  $$('[data-prod-kind]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  prodKind = b.dataset.prodKind;
+  renderProducts();
+}));
+$('#prodSearch').addEventListener('input', (e) => { prodQuery = e.target.value.trim(); renderProducts(); });
 $('#products').addEventListener('submit', async (e) => {
   e.preventDefault();
   const f = e.target.elements;
@@ -408,11 +428,12 @@ $('#products').addEventListener('submit', async (e) => {
   const sale = f.salePrice.value === '' ? null : Number(f.salePrice.value);
   const price = Number(f.price.value) || 0;
   if (sale !== null && sale >= price) { toast('Sale price must be lower than the price'); return; }
+  const data = { price, salePrice: sale, active: f.active.checked, updatedAt: serverTimestamp() };
+  if (f.deliveryUrl) data.deliveryUrl = f.deliveryUrl.value.trim();
+  if (f.preview) data.preview = f.preview.checked;
   try {
-    await setDoc(doc(db, 'store_products', id), {
-      price, salePrice: sale, active: f.active.checked, deliveryUrl: f.deliveryUrl.value.trim(), updatedAt: serverTimestamp(),
-    }, { merge: true });
-    toast('Saved — live on the website now');
+    await setDoc(doc(db, 'store_products', id), data, { merge: true });
+    toast(price ? 'Saved — now sold for TSh ' + (sale ?? price).toLocaleString('en-US') : 'Saved — free to read and download');
   } catch (err) { permissionProblem(err); toast(err.message); }
 });
 
@@ -463,7 +484,7 @@ $('#coupons').addEventListener('click', async (e) => {
   }
   if (e.target.matches('[data-share]')) {
     const off = c.type === 'fixed' ? money(c.value) : c.value + '%';
-    const text = `Tumia msimbo ${c.id} kupata punguzo la ${off} kwenye Duka la Makala Maalum: ${CFG.siteUrl}sw/duka/`;
+    const text = `Tumia msimbo ${c.id} kupata punguzo la ${off} kwenye Duka la Injili Milele: ${CFG.siteUrl}sw/duka/`;
     await navigator.clipboard.writeText(text);
     toast('Share message copied');
   }

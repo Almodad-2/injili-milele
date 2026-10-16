@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Store Dashboard · Makala Maalum</title>
+<title>Store Dashboard · Injili Milele</title>
 <meta name="theme-color" content="#1d2747">
 <link rel="icon" href="../assets/img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,6 +56,10 @@
   .table th, .table td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; font-size: .92rem; }
   .table th { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: var(--paper-2); }
   .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .prod-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin: 0 0 16px; }
+  .seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); }
+  .seg button { border: 0; background: none; padding: 7px 14px; border-radius: 999px; cursor: pointer; font-weight: 600; font-size: .86rem; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
   .prod-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
   .prod { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; display: grid; gap: 12px; box-shadow: var(--shadow); }
   .prod header { display: flex; gap: 14px; align-items: center; }
@@ -97,7 +101,7 @@
 <main class="wrap" id="app">
   <!-- Login -->
   <section class="login panel" id="loginView" hidden>
-    <span class="kicker">Makala Maalum · Admin</span>
+    <span class="kicker">Injili Milele · Admin</span>
     <h1>Sign in</h1>
     <form id="loginForm" class="stack">
       <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required></div>
@@ -122,7 +126,7 @@
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="overview" aria-selected="true">Overview</button>
       <button type="button" role="tab" data-tab="orders">Orders <span class="count" id="pendingCount" hidden></span></button>
-      <button type="button" role="tab" data-tab="products">Prices &amp; Books</button>
+      <button type="button" role="tab" data-tab="products">Prices &amp; Library</button>
       <button type="button" role="tab" data-tab="coupons">Discount Codes</button>
       <button type="button" role="tab" data-tab="admins" id="adminsTab" hidden>Admins</button>
       <button type="button" role="tab" data-tab="setup">Setup</button>
@@ -164,7 +168,11 @@
     </div>
 
     <div class="view" data-view="products" hidden>
-      <p class="muted">Changes go live on the website immediately. Set a <b>sale price</b> to show a discount to everyone. Turn a book off to hide it from the store. “Send books” creates private download links automatically (valid 7 days). The delivery link below is only a fallback.</p>
+      <p class="muted">Changes go live on the website immediately. Every article, book and audio starts <b>free</b> (price 0): readers can read and download it. Give it a price to sell it — with <b>Free preview</b> on, readers still see the first pages; with it off, they see only the cover, contents and the buy button. Set a <b>sale price</b> to show a discount. “Send books” creates private download links (valid 7 days).</p>
+      <div class="prod-tools">
+        <div class="seg" role="group"><button type="button" data-prod-kind="all" aria-pressed="true">All</button><button type="button" data-prod-kind="bundle" aria-pressed="false">Collections</button><button type="button" data-prod-kind="singles" aria-pressed="false">Articles &amp; books</button><button type="button" data-prod-kind="audio" aria-pressed="false">Audio</button></div>
+        <input class="in" id="prodSearch" type="search" placeholder="Search titles…" style="max-width:260px">
+      </div>
       <div class="prod-grid" id="products"></div>
     </div>
 

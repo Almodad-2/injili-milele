@@ -14,7 +14,7 @@
     }
   ],
   "vars": {
-    "SITE_URL": "https://almodad-2.github.io/makala-maalum/",
+    "SITE_URL": "https://almodad-2.github.io/injili-milele/",
     "WORKER_URL": "https://makala-payments.modaofpeace.workers.dev",
     "ALLOWED_ORIGINS": "https://almodad-2.github.io,http://localhost:8765",
     "PESAPAL_BASE": "https://pay.pesapal.com/v3",
