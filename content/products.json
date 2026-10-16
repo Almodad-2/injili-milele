@@ -8,16 +8,53 @@
     "pdf": "makala-maalum-mkusanyiko",
     "articles": "sw:*",
     "image": "1363d76253",
-    "title": { "sw": "Makala Maalum: Mkusanyiko Kamili", "en": "Makala Maalum: The Complete Swahili Collection" },
-    "subtitle": { "sw": "Makala zote 8 katika kitabu kimoja cha PDF", "en": "All 8 Swahili articles in one PDF book" },
-    "description": {
-      "sw": "Kitabu pepe (PDF) kilichopangwa vizuri chenye makala zote za Makala Maalum: Sabato, Sanduku la Agano, Uungu wa Kristo, Pambano Kuu, Kalenda ya Gregory, Ibada na Milenia. Kinafaa kwa kujisomea, vikundi vya kujifunza Biblia na kuchapisha.",
-      "en": "A beautifully typeset PDF e-book with every Makala Maalum article in Swahili: the Sabbath, the Ark of the Covenant, the Sonship of Christ, the Great Controversy, the Gregorian calendar, worship and the Millennium. Ideal for personal study, Bible study groups and printing."
-    },
-    "includes": {
-      "sw": ["Makala 8 kamili", "Kurasa za kuchapishwa (A5)", "Yaliyomo yenye viungo", "Masasisho ya bure"],
-      "en": ["8 complete articles", "Print-ready A5 pages", "Linked table of contents", "Free updates"]
-    }
+    "title": "Makala Maalum: Mkusanyiko Kamili",
+    "subtitle": "Makala zote 8 katika kitabu kimoja cha PDF",
+    "description": "Kitabu pepe (PDF) kilichopangwa vizuri chenye makala zote za Makala Maalum: Sabato, Sanduku la Agano, Uungu wa Kristo, Pambano Kuu, Kalenda ya Gregory, Ibada na Milenia. Kinafaa kwa kujisomea, vikundi vya kujifunza Biblia na kuchapisha.",
+    "includes": [
+      "Makala 8 kamili",
+      "Kurasa za kuchapishwa (A5)",
+      "Yaliyomo yenye viungo",
+      "Masasisho ya bure"
+    ],
+    "pair": "collection"
+  },
+  {
+    "id": "sabato-somo",
+    "lang": "sw",
+    "type": "study",
+    "price": 2000,
+    "pdf": "sabato-somo",
+    "articles": "sw:sabato-kivuli-cha-mambo-yajayo,sw:kalenda-ya-gregory-na-sabato",
+    "image": "9c567f468b",
+    "title": "Sabato: Kumbukumbu, si Kivuli",
+    "subtitle": "Mwongozo wa kujifunza kuhusu Sabato",
+    "description": "Makala mbili kuhusu Sabato zikiwa pamoja na maswali ya kujadili mwishoni mwa kila sehemu — zinafaa kwa Shule ya Sabato, vikundi vidogo na mafundisho ya ubatizo.",
+    "includes": [
+      "Makala 2 kuhusu Sabato",
+      "Maswali ya kujadili",
+      "Kurasa za kuchapishwa (A5)"
+    ],
+    "pair": "sabbath-study"
+  },
+  {
+    "id": "milenia-bure",
+    "lang": "sw",
+    "type": "free",
+    "price": 0,
+    "pdf": "milenia-mambo-8",
+    "free": true,
+    "articles": "sw:milenia-mambo-muhimu-8",
+    "image": "fe039240e9",
+    "title": "Milenia: Mambo 8 (Bure)",
+    "subtitle": "Zawadi ya bure kwa ajili yako",
+    "description": "Pakua bure makala ya Milenia katika PDF nzuri ya kuchapisha. Shiriki na marafiki zako!",
+    "includes": [
+      "Makala kamili ya Milenia",
+      "PDF ya kuchapisha",
+      "Bure kabisa"
+    ],
+    "pair": "millennium"
   },
   {
     "id": "featured-articles-collection",
@@ -28,54 +65,52 @@
     "pdf": "featured-articles-collection",
     "articles": "en:*",
     "image": "64d044e642",
-    "title": { "sw": "Featured Articles: Mkusanyiko wa Kiingereza", "en": "Featured Articles: The Complete Collection" },
-    "subtitle": { "sw": "Makala 6 za Kiingereza katika PDF moja", "en": "All 6 English articles in one PDF book" },
-    "description": {
-      "sw": "Makala zote za Kiingereza katika kitabu kimoja cha PDF — kwa ajili yako au kumpa rafiki anayesoma Kiingereza.",
-      "en": "Every English Featured Article gathered into one elegant PDF e-book: the Ark of the Covenant, the meaning of “begotten”, why God created Lucifer, the Gregorian calendar and the Sabbath, kneeling in prayer and the Millennium."
-    },
-    "includes": {
-      "sw": ["Makala 6 kamili", "Kurasa za kuchapishwa (A5)", "Yaliyomo yenye viungo", "Masasisho ya bure"],
-      "en": ["6 complete articles", "Print-ready A5 pages", "Linked table of contents", "Free updates"]
-    }
+    "title": "Featured Articles: The Complete Collection",
+    "subtitle": "All 6 articles in one PDF book",
+    "description": "Every English Featured Article gathered into one elegant PDF e-book: the Ark of the Covenant, the meaning of “begotten”, why God created Lucifer, the Gregorian calendar and the Sabbath, kneeling in prayer and the Millennium.",
+    "includes": [
+      "6 complete articles",
+      "Print-ready A5 pages",
+      "Linked table of contents",
+      "Free updates"
+    ],
+    "pair": "collection"
   },
   {
-    "id": "sabato-somo",
-    "lang": "sw",
+    "id": "sabbath-calendar-study",
+    "lang": "en",
     "type": "study",
     "price": 2000,
-    "pdf": "sabato-somo",
-    "articles": "sw:sabato-kivuli-cha-mambo-yajayo,sw:kalenda-ya-gregory-na-sabato",
-    "image": "9c567f468b",
-    "title": { "sw": "Sabato: Kumbukumbu, si Kivuli", "en": "Sabbath: A Memorial, Not a Shadow" },
-    "subtitle": { "sw": "Mwongozo wa kujifunza kuhusu Sabato (PDF)", "en": "A Swahili Sabbath study guide (PDF)" },
-    "description": {
-      "sw": "Makala mbili kuhusu Sabato zikiwa pamoja na maswali ya kujadili mwishoni mwa kila sehemu — zinafaa kwa Shule ya Sabato, vikundi vidogo na mafundisho ya ubatizo.",
-      "en": "The two Sabbath articles together with discussion questions at the end of each part — ideal for Sabbath School, small groups and baptismal classes (Swahili)."
-    },
-    "includes": {
-      "sw": ["Makala 2 kuhusu Sabato", "Maswali ya kujadili", "Kurasa za kuchapishwa (A5)"],
-      "en": ["2 Sabbath articles", "Discussion questions", "Print-ready A5 pages"]
-    }
+    "pdf": "sabbath-calendar-study",
+    "pair": "sabbath-study",
+    "articles": "en:gregory-calendar-and-the-sabbath",
+    "image": "4a26668945",
+    "title": "The Sabbath and the Calendar: A Study Guide",
+    "subtitle": "Was the Sabbath lost? A study guide (PDF)",
+    "description": "The article on Pope Gregory XIII’s calendar reform and the Sabbath, with discussion questions at the end — ideal for Sabbath School, small groups and baptismal classes.",
+    "includes": [
+      "The complete article",
+      "Discussion questions",
+      "Print-ready A5 pages"
+    ]
   },
   {
-    "id": "milenia-bure",
-    "lang": "sw",
+    "id": "millennium-free",
+    "lang": "en",
     "type": "free",
     "price": 0,
-    "pdf": "milenia-mambo-8",
     "free": true,
-    "articles": "sw:milenia-mambo-muhimu-8,en:the-millennium-8-key-insights",
-    "image": "fe039240e9",
-    "title": { "sw": "Milenia: Mambo 8 (Bure)", "en": "The Millennium: 8 Insights (Free)" },
-    "subtitle": { "sw": "Zawadi ya bure — Kiswahili na Kiingereza", "en": "A free gift — Swahili & English" },
-    "description": {
-      "sw": "Pakua bure makala ya Milenia kwa Kiswahili na Kiingereza katika PDF moja. Shiriki na marafiki zako!",
-      "en": "Download the Millennium article in both Swahili and English as one free PDF. Share it with your friends!"
-    },
-    "includes": {
-      "sw": ["Kiswahili + Kiingereza", "PDF ya kuchapisha", "Bure kabisa"],
-      "en": ["Swahili + English", "Printable PDF", "Completely free"]
-    }
+    "pdf": "millennium-8-insights",
+    "pair": "millennium",
+    "articles": "en:the-millennium-8-key-insights",
+    "image": "7aab5c2a2b",
+    "title": "The Millennium: 8 Insights (Free)",
+    "subtitle": "A free gift for you",
+    "description": "Download the Millennium article free as a beautiful, printable PDF. Share it with your friends!",
+    "includes": [
+      "The complete Millennium article",
+      "Printable PDF",
+      "Completely free"
+    ]
   }
 ]

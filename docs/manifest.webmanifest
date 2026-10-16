@@ -3,8 +3,8 @@
  "short_name": "Makala Maalum",
  "start_url": "./",
  "display": "standalone",
- "background_color": "#12172e",
- "theme_color": "#12172e",
+ "background_color": "#1d2747",
+ "theme_color": "#1d2747",
  "icons": [
   {
    "src": "assets/img/icon-192.png",

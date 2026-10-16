@@ -16,7 +16,7 @@ PRODUCTS = json.load(open(os.path.join(ROOT, 'content/products.json')))
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 FONTS = ('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;'
          '1,9..144,300..700,0..100&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600'
-         '&family=Instrument+Sans:wght@400..700&display=swap')
+         '&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap')
 LOGO = '91060cb46f'
 
 PATHS = {
@@ -221,9 +221,9 @@ def articles_for(p):
 # ------------------------------------------------------------------ layout
 def cover(p, lang, root):
     cls = 'cover free' if p.get('free') else 'cover'
-    top = T[lang]['free'] if p.get('free') else ('PDF · ' + T[lang]['langBadge'][p['lang']])
+    top = T[lang]['free'] if p.get('free') else 'PDF'
     return (f'<div class="{cls}" aria-hidden="true"><img src="{root}assets/img/{p["image"]}.jpg" alt="" loading="lazy">'
-            f'<div class="cover-top">{e(top)}</div><div class="cover-title">{e(p["title"][lang])}</div>'
+            f'<div class="cover-top">{e(top)}</div><div class="cover-title">{e(p["title"])}</div>'
             f'<div class="cover-author">{e(SITE["author"])}</div></div>')
 
 
@@ -258,10 +258,10 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
     if products_js:
         mm['products'] = {
             x['id']: {
-                'title': x['title'][lang], 'subtitle': x['subtitle'][lang], 'price': x['price'],
+                'title': x['title'], 'subtitle': x['subtitle'], 'price': x['price'],
                 'coverHtml': cover(x, lang, root),
                 'download': (root + f"downloads/{x['pdf']}.pdf") if x.get('free') else None,
-            } for x in PRODUCTS
+            } for x in PRODUCTS if x['lang'] == lang
         }
 
     def nav(key, href, label, icon):
@@ -279,7 +279,7 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{e(title)}</title>
 <meta name="description" content="{e(desc or strip_tags(t['tagline']))}">
-<meta name="theme-color" content="#12172e">
+<meta name="theme-color" content="#1d2747">
 <link rel="canonical" href="{url}">
 <link rel="alternate" hreflang="{other}" href="{SITE['baseUrl']}{other_url}">
 <meta property="og:type" content="website">
@@ -380,7 +380,7 @@ def build_home(lang):
             cats.append(a['category'])
     chips = f'<button class="chip" type="button" data-filter="all" aria-pressed="true">{t["all"]}</button>' + ''.join(
         f'<button class="chip" type="button" data-filter="{e(c)}" aria-pressed="false">{e(c)}</button>' for c in cats)
-    featured_products = [p for p in PRODUCTS if p.get('featured') or p.get('free')][:3]
+    featured_products = [p for p in PRODUCTS if p['lang'] == lang][:3]
     books = ''.join(cover(p, lang, root) for p in featured_products)
     body = f'''
 <section class="hero">
@@ -390,7 +390,7 @@ def build_home(lang):
     <h1 class="rise d1">{t['heroTitle']}</h1>
     <p class="lede rise d2">{t['tagline']}</p>
     <div class="hero-actions rise d3">
-      <a class="btn btn-gold" href="{root}{art_path(lead)}">{t['readFeatured']} {ICON['arrow']}</a>
+      <a class="btn btn-primary" href="{root}{art_path(lead)}">{t['readFeatured']} {ICON['arrow']}</a>
       <a class="btn btn-ghost" href="#makala">{t['browse']}</a>
     </div>
     <p class="hero-verse rise d4"><b>{t['verseRef']}</b><span>“{t['verse']}”</span></p>
@@ -417,7 +417,7 @@ def build_home(lang):
       <span class="kicker">{t['bandKicker']}</span>
       <h2>{t['bandTitle']}</h2>
       <p>{t['bandText']}</p>
-      <a class="btn btn-gold" href="{root}{lang}/{PATHS[lang]['store']}/">{ICON['store']} {t['visitStore']}</a>
+      <a class="btn btn-primary" href="{root}{lang}/{PATHS[lang]['store']}/">{ICON['store']} {t['visitStore']}</a>
     </div>
     <div class="band-books" style="font-size:16px">{books}</div>
   </div>
@@ -519,14 +519,15 @@ def build_store(lang):
     rel = f"{lang}/{p['store']}/"
     root = '../../'
     items = []
-    for x in PRODUCTS:
-        btn = (f'<button class="btn btn-gold add" type="button" data-buy="{x["id"]}">{ICON["down"]} {t["getFree"]}</button>' if x.get('free')
+    own = [x for x in PRODUCTS if x['lang'] == lang]
+    for x in own:
+        btn = (f'<button class="btn btn-primary add" type="button" data-buy="{x["id"]}">{ICON["down"]} {t["getFree"]}</button>' if x.get('free')
                else f'<button class="btn btn-ink add" type="button" data-add="{x["id"]}">{t["addToCart"]}</button>')
         items.append(f'''<article class="product reveal" data-product="{x['id']}">
   <a class="cover-link" href="{root}{prod_path(lang, x)}">{cover(x, lang, root)}</a>
-  <div class="card-meta"><span class="cat">PDF</span><span class="badge">{T[lang]['langBadge'][x['lang']]}</span></div>
-  <h3><a href="{root}{prod_path(lang, x)}">{e(x['title'][lang])}</a></h3>
-  <p class="sub">{e(x['subtitle'][lang])}</p>
+  <div class="card-meta"><span class="cat">PDF</span></div>
+  <h3><a href="{root}{prod_path(lang, x)}">{e(x['title'])}</a></h3>
+  <p class="sub">{e(x['subtitle'])}</p>
   <div class="row">{price_html(x, lang)}{btn}</div>
 </article>''')
     body = f'''
@@ -540,7 +541,7 @@ def build_store(lang):
 </section>
 <section class="section">
   <div class="wrap">
-    <div class="section-head"><div><span class="kicker">{t['store']} · {len(PRODUCTS)}</span><h2>{t['products']}</h2></div>
+    <div class="section-head"><div><span class="kicker">{t['store']} · {len(own)}</span><h2>{t['products']}</h2></div>
       <a class="btn btn-line" href="{root}{lang}/{p['cart']}/">{ICON['bag']} {t['cart']}</a></div>
     <div class="products">{''.join(items)}</div>
   </div>
@@ -565,7 +566,7 @@ def build_store(lang):
     write(rel, page(lang, rel, f"{t['store']} · {t['siteText']}", body, desc=strip_tags(t['storeText']), active='store',
                     other_url=f"{other}/{PATHS[other]['store']}/", products_js=True))
 
-    for x in PRODUCTS:
+    for x in own:
         build_product(lang, x)
 
 
@@ -574,23 +575,23 @@ def build_product(lang, x):
     rel = prod_path(lang, x)
     root = '../../../'
     contents = ''.join(f'<li><a href="{root}{art_path(a)}">{e(a["title"])}</a></li>' for a in articles_for(x))
-    includes = ''.join(f'<li>{ICON["check"]}<span>{e(i)}</span></li>' for i in x['includes'][lang])
+    includes = ''.join(f'<li>{ICON["check"]}<span>{e(i)}</span></li>' for i in x['includes'])
     if x.get('free'):
-        actions = (f'<a class="btn btn-gold btn-block" href="{root}downloads/{x["pdf"]}.pdf" download>{ICON["down"]} {t["getFree"]}</a>')
+        actions = (f'<a class="btn btn-primary btn-block" href="{root}downloads/{x["pdf"]}.pdf" download>{ICON["down"]} {t["getFree"]}</a>')
     else:
-        actions = (f'<button class="btn btn-gold btn-block" type="button" data-buy="{x["id"]}">{t["buyNow"]} {ICON["arrow"]}</button>'
+        actions = (f'<button class="btn btn-primary btn-block" type="button" data-buy="{x["id"]}">{t["buyNow"]} {ICON["arrow"]}</button>'
                    f'<button class="btn btn-line btn-block" type="button" data-add="{x["id"]}">{t["addToCart"]}</button>')
         if x.get('paymentUrl'):
             actions += f'<a class="btn btn-ink btn-block" href="{e(x["paymentUrl"])}" target="_blank" rel="noopener">{t["payNow"]}</a>'
     body = f'''
 <div class="wrap">
-  <nav class="crumbs" style="color:var(--muted);padding-top:28px" aria-label="Breadcrumb"><a style="color:var(--gold)" href="{root}{lang}/{PATHS[lang]['store']}/">{t['store']}</a><span>/</span><span>{e(x['title'][lang])}</span></nav>
+  <nav class="crumbs" style="color:var(--muted);padding-top:28px" aria-label="Breadcrumb"><a style="color:var(--accent)" href="{root}{lang}/{PATHS[lang]['store']}/">{t['store']}</a><span>/</span><span>{e(x['title'])}</span></nav>
   <div class="product-page">
     <div class="stage rise">{cover(x, lang, root)}</div>
     <div>
-      <div class="card-meta rise"><span class="cat">PDF · {T[lang]['langBadge'][x['lang']]}</span></div>
-      <h1 class="rise d1">{e(x['title'][lang])}</h1>
-      <p class="lead rise d2">{e(x['description'][lang])}</p>
+      <div class="card-meta rise"><span class="cat">PDF</span></div>
+      <h1 class="rise d1">{e(x['title'])}</h1>
+      <p class="lead rise d2">{e(x['description'])}</p>
       <div class="buybox rise d3" data-buybox="{x['id']}">
         {price_html(x, lang)}
         {actions}
@@ -603,8 +604,9 @@ def build_product(lang, x):
   </div>
 </div>'''
     other = 'en' if lang == 'sw' else 'sw'
-    write(rel, page(lang, rel, f"{x['title'][lang]} · {t['store']}", body, desc=x['description'][lang], image=x['image'],
-                    active='store', other_url=prod_path(other, x), products_js=True))
+    twin = next((y for y in PRODUCTS if y['lang'] == other and y.get('pair') and y.get('pair') == x.get('pair')), None)
+    write(rel, page(lang, rel, f"{x['title']} · {t['store']}", body, desc=x['description'], image=x['image'],
+                    active='store', other_url=prod_path(other, twin) if twin else f"{other}/{PATHS[other]['store']}/", products_js=True))
 
 
 def build_cart(lang):
@@ -618,7 +620,7 @@ def build_cart(lang):
   <div class="section-head" style="margin:40px 0 0"><div><span class="kicker">{t['store']}</span><h2>{t['cartTitle']}</h2></div></div>
   <div class="panel empty-cart" data-empty hidden>
     <p>{t['emptyCart']}</p>
-    <a class="btn btn-gold" href="{root}{lang}/{p['store']}/">{t['continue']}</a>
+    <a class="btn btn-primary" href="{root}{lang}/{p['store']}/">{t['continue']}</a>
   </div>
   <div class="checkout" data-filled>
     <div class="stack">
@@ -683,7 +685,6 @@ def build_about(lang):
   <div class="about">
     <span class="kicker rise">{t['about']}</span>
     <h1 class="rise d1">{t['aboutTitle']}</h1>
-    <div class="ornament">✦</div>
     {paras}
     <h2 style="font-family:var(--display);font-weight:500;margin-top:40px">{t['contact']}</h2>
     <div class="contact-cards">
@@ -707,7 +708,7 @@ def build_root():
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Makala Maalum · Featured Articles</title>
 <meta name="description" content="Makala za kina juu ya Imani za Msingi za Biblia · In-depth articles on the Fundamental Beliefs of the Bible.">
-<meta name="theme-color" content="#12172e">
+<meta name="theme-color" content="#1d2747">
 <meta property="og:title" content="Makala Maalum · Featured Articles">
 <meta property="og:image" content="{SITE['baseUrl']}assets/img/{lead['image']}.jpg">
 <link rel="icon" href="assets/img/icon-192.png">
@@ -734,7 +735,7 @@ def build_root():
     <h1 class="rise d1">Makala <em>Maalum</em></h1>
     <p class="rise d2">Makala za kina juu ya Imani za Msingi za Biblia.<br><i>In-depth articles on the Fundamental Beliefs of the Bible.</i></p>
     <div class="choices rise d3">
-      <a class="btn btn-gold" href="sw/" onclick="remember('sw')">Kiswahili {ICON['arrow']}</a>
+      <a class="btn btn-primary" href="sw/" onclick="remember('sw')">Kiswahili {ICON['arrow']}</a>
       <a class="btn btn-ghost" href="en/" onclick="remember('en')">English {ICON['arrow']}</a>
     </div>
   </div>
@@ -748,7 +749,7 @@ def build_root():
   <span class="kicker">404</span>
   <h1>{T['sw']['notFound']}</h1>
   <p>{T['sw']['notFoundText']}<br><i>{T['en']['notFoundText']}</i></p>
-  <p><a class="btn btn-gold" href="{SITE['baseUrl']}sw/">{T['sw']['backHome']}</a> <a class="btn btn-line" href="{SITE['baseUrl']}en/">{T['en']['backHome']}</a></p>
+  <p><a class="btn btn-primary" href="{SITE['baseUrl']}sw/">{T['sw']['backHome']}</a> <a class="btn btn-line" href="{SITE['baseUrl']}en/">{T['en']['backHome']}</a></p>
 </div>''')
     # 404 is served from any depth: use absolute URLs
     nf = nf.replace('href="sw/', f'href="{SITE["baseUrl"]}sw/').replace('href="en/', f'href="{SITE["baseUrl"]}en/') \
@@ -779,12 +780,12 @@ def statics():
         shutil.copytree(dl, os.path.join(OUT, 'downloads'), dirs_exist_ok=True)
     open(os.path.join(OUT, '.nojekyll'), 'w').close()
     os.makedirs(os.path.join(OUT, 'data'), exist_ok=True)
-    json.dump([dict(p, url={l: SITE['baseUrl'] + prod_path(l, p) for l in ('sw', 'en')}) for p in PRODUCTS],
+    json.dump([dict(p, url=SITE['baseUrl'] + prod_path(p['lang'], p)) for p in PRODUCTS],
               open(os.path.join(OUT, 'data/products.json'), 'w'), ensure_ascii=False, indent=1)
     build_admin()
     json.dump({
         'name': 'Makala Maalum · Featured Articles', 'short_name': 'Makala Maalum',
-        'start_url': './', 'display': 'standalone', 'background_color': '#12172e', 'theme_color': '#12172e',
+        'start_url': './', 'display': 'standalone', 'background_color': '#1d2747', 'theme_color': '#1d2747',
         'icons': [{'src': 'assets/img/icon-192.png', 'sizes': '192x192', 'type': 'image/png'},
                   {'src': 'assets/img/icon-512.png', 'sizes': '512x512', 'type': 'image/png'}],
     }, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), indent=1)
@@ -810,6 +811,13 @@ STUDY_QUESTIONS = {
         'Mfuatano wa Ijumaa, Sabato na Jumapili katika Luka 23:54–24:1 unatusaidiaje kuitambua Sabato leo?',
         'Utamweleza vipi rafiki yako kwa upole na hekima kwamba Sabato haijapotea?',
     ],
+    'gregory-calendar-and-the-sabbath': [
+        'Did the calendar change of 1582 affect the dates of the month or the cycle of the days of the week? Explain.',
+        'How do the names of the seventh day in many of the world’s languages confirm the Sabbath of the Bible?',
+        'What does Isaiah 66:22–23 teach about the Sabbath in the new earth?',
+        'How does the sequence of Friday, Sabbath and Sunday in Luke 23:54–24:1 help us identify the Sabbath today?',
+        'How would you explain to a friend, gently and wisely, that the Sabbath has not been lost?',
+    ],
 }
 
 
@@ -820,7 +828,7 @@ def build_pdfs():
     for x in PRODUCTS:
         lang = x['lang']
         arts = articles_for(x)
-        study = x['id'] == 'sabato-somo'
+        study = x['type'] == 'study'
         toc = ''.join(f'<li><a href="#a{i}">{e(a["title"])}</a><span>{e(a["author"])}</span></li>' for i, a in enumerate(arts))
         parts = []
         for i, a in enumerate(arts):
@@ -829,7 +837,8 @@ def build_pdfs():
             body = body.replace('{{root}}', ROOT + '/')
             q = ''
             if study and a['slug'] in STUDY_QUESTIONS:
-                q = '<section class="qs"><h3>Maswali ya Kujadili</h3><ol>' + ''.join(
+                qh = 'Maswali ya Kujadili' if lang == 'sw' else 'Discussion Questions'
+                q = f'<section class="qs"><h3>{qh}</h3><ol>' + ''.join(
                     f'<li>{e(s)}<div class="lines"></div></li>' for s in STUDY_QUESTIONS[a['slug']]) + '</ol></section>'
             parts.append(f'''<section class="art" id="a{i}">
 <img class="hero" src="file://{ROOT}/assets/img/{a['image']}.jpg">
@@ -837,53 +846,52 @@ def build_pdfs():
 <h1>{e(a['title'])}</h1>
 <div class="by">{e(a['author'])}</div>
 <div class="prose">{body}</div>{q}</section>''')
-        is_sw = x['lang'] == 'sw' and not x.get('free')
         toc_h = 'Yaliyomo' if x['lang'] == 'sw' else 'Contents'
         doc = f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8">
 <link rel="stylesheet" href="{FONTS}">
 <style>
 @page {{ size: A5; margin: 18mm 16mm 20mm; }}
 @page :first {{ margin: 0; }}
-body {{ font-family: Literata, Georgia, serif; font-size: 10.5pt; line-height: 1.6; color: #1c2033; margin: 0; }}
-.cover {{ height: 210mm; width: 148mm; position: relative; color: #f6efe0; background: #12172e; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; padding: 22mm 16mm 18mm 20mm; box-sizing: border-box; }}
+body {{ font-family: Literata, Georgia, serif; font-size: 10.5pt; line-height: 1.6; color: #172018; margin: 0; }}
+.cover {{ height: 210mm; width: 148mm; position: relative; color: #f2f4fa; background: #1d2747; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; padding: 22mm 16mm 18mm 20mm; box-sizing: border-box; }}
 .cover img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; z-index: 0; }}
-.cover::before {{ content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(18,23,46,.15), rgba(18,23,46,.95) 72%); z-index: 1; }}
+.cover::before {{ content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(29,39,71,.15), rgba(29,39,71,.95) 72%); z-index: 1; }}
 .cover > * {{ position: relative; z-index: 2; }}
-.cover .k {{ font-family: "Instrument Sans", sans-serif; letter-spacing: .25em; text-transform: uppercase; font-size: 8pt; color: #f1dcae; }}
+.cover .k {{ font-family: "Fira Sans", sans-serif; letter-spacing: .25em; text-transform: uppercase; font-size: 8pt; color: #d5def5; }}
 .cover h1 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 30pt; line-height: 1.02; margin: 0 0 8mm; letter-spacing: -.02em; }}
-.cover p {{ font-size: 11pt; color: #ddd4c2; margin: 0 0 10mm; }}
-.cover .a {{ font-family: "Instrument Sans", sans-serif; letter-spacing: .16em; text-transform: uppercase; font-size: 8pt; }}
+.cover p {{ font-size: 11pt; color: #d3d9ea; margin: 0 0 10mm; }}
+.cover .a {{ font-family: "Fira Sans", sans-serif; letter-spacing: .16em; text-transform: uppercase; font-size: 8pt; }}
 .toc {{ page-break-after: always; }}
 .toc h2 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 24pt; margin: 0 0 6mm; }}
-.toc ol {{ padding-left: 5mm; }} .toc li {{ margin: 0 0 4mm; }} .toc li::marker {{ color: #b8862f; font-family: Fraunces, serif; }}
+.toc ol {{ padding-left: 5mm; }} .toc li {{ margin: 0 0 4mm; }} .toc li::marker {{ color: #5a73aa; font-family: Fraunces, serif; }}
 .toc a {{ color: inherit; text-decoration: none; font-family: Fraunces, serif; font-size: 12pt; display: block; }}
-.toc span {{ font-size: 8.5pt; color: #5d6175; }}
+.toc span {{ font-size: 8.5pt; color: #5b6270; }}
 .art {{ page-break-before: always; }}
 .art .hero {{ width: 100%; height: 48mm; object-fit: cover; border-radius: 3mm; }}
-.cat {{ font-family: "Instrument Sans", sans-serif; text-transform: uppercase; letter-spacing: .2em; font-size: 7.5pt; color: #b8862f; margin: 6mm 0 2mm; font-weight: 700; }}
+.cat {{ font-family: "Fira Sans", sans-serif; text-transform: uppercase; letter-spacing: .2em; font-size: 7.5pt; color: #5a73aa; margin: 6mm 0 2mm; font-weight: 700; }}
 .art h1 {{ font-family: Fraunces, serif; font-weight: 400; font-size: 20pt; line-height: 1.1; margin: 0 0 3mm; letter-spacing: -.01em; }}
-.by {{ font-family: "Instrument Sans", sans-serif; font-size: 8.5pt; color: #5d6175; margin-bottom: 6mm; }}
+.by {{ font-family: "Fira Sans", sans-serif; font-size: 8.5pt; color: #5b6270; margin-bottom: 6mm; }}
 .prose h2 {{ font-family: Fraunces, serif; font-weight: 500; font-size: 13pt; margin: 6mm 0 2mm; page-break-after: avoid; }}
 .prose p {{ margin: 0 0 3mm; text-align: justify; hyphens: auto; }}
-.prose > p:first-of-type::first-letter {{ float: left; font-family: Fraunces, serif; font-size: 34pt; line-height: .85; color: #b8862f; margin: 1mm 1.5mm 0 0; }}
-.prose blockquote {{ margin: 4mm 0; padding: 3mm 4mm; background: #f3ecdd; border-left: 2px solid #b8862f; font-style: italic; page-break-inside: avoid; }}
+.prose > p:first-of-type::first-letter {{ float: left; font-family: Fraunces, serif; font-size: 34pt; line-height: .85; color: #5a73aa; margin: 1mm 1.5mm 0 0; }}
+.prose blockquote {{ margin: 4mm 0; padding: 3mm 4mm; background: #e4e8f4; border-left: 2px solid #5a73aa; font-style: italic; page-break-inside: avoid; }}
 .prose blockquote p {{ margin: 0; }}
 .prose img {{ width: 100%; border-radius: 2mm; margin: 3mm 0; }}
 .prose a {{ color: #4257b8; }}
 .prose .dl a {{ color: #4257b8; }}
-.vid {{ font-family: "Instrument Sans", sans-serif; font-size: 9pt; background: #f3ecdd; padding: 3mm; border-radius: 2mm; }}
-.qs {{ margin-top: 8mm; padding: 5mm; border: 1px solid #e3d9c4; border-radius: 3mm; page-break-inside: avoid; }}
-.qs h3 {{ font-family: Fraunces, serif; font-weight: 500; margin: 0 0 3mm; color: #b8862f; }}
-.qs li {{ margin-bottom: 3mm; }} .qs .lines {{ height: 12mm; border-bottom: 1px dotted #c9bfa9; }}
-.colophon {{ page-break-before: always; text-align: center; padding-top: 50mm; font-size: 9pt; color: #5d6175; }}
-.colophon b {{ font-family: Fraunces, serif; font-size: 14pt; color: #1c2033; font-weight: 500; display: block; margin-bottom: 3mm; }}
+.vid {{ font-family: "Fira Sans", sans-serif; font-size: 9pt; background: #e4e8f4; padding: 3mm; border-radius: 2mm; }}
+.qs {{ margin-top: 8mm; padding: 5mm; border: 1px solid #dfe4f1; border-radius: 3mm; page-break-inside: avoid; }}
+.qs h3 {{ font-family: Fraunces, serif; font-weight: 500; margin: 0 0 3mm; color: #5a73aa; }}
+.qs li {{ margin-bottom: 3mm; }} .qs .lines {{ height: 12mm; border-bottom: 1px dotted #c4cbdd; }}
+.colophon {{ page-break-before: always; text-align: center; padding-top: 50mm; font-size: 9pt; color: #5b6270; }}
+.colophon b {{ font-family: Fraunces, serif; font-size: 14pt; color: #172018; font-weight: 500; display: block; margin-bottom: 3mm; }}
 </style></head><body>
 <section class="cover"><img src="file://{ROOT}/assets/img/{x['image']}.jpg">
 <div class="k">Injili Milele · PDF</div>
-<div><h1>{e(x['title'][x['lang']])}</h1><p>{e(x['subtitle'][x['lang']])}</p><div class="a">{e(SITE['author'])}</div></div></section>
+<div><h1>{e(x['title'])}</h1><p>{e(x['subtitle'])}</p><div class="a">{e(SITE['author'])}</div></div></section>
 <section class="toc"><h2>{toc_h}</h2><ol>{toc}</ol></section>
 {''.join(parts)}
-<section class="colophon"><b>{e(x['title'][x['lang']])}</b>
+<section class="colophon"><b>{e(x['title'])}</b>
 © {datetime.date.today().year} {e(SITE['author'])} · Injili Milele<br>{SITE['baseUrl']}<br>WhatsApp {SITE['phoneDisplay']} · {SITE['email']}</section>
 </body></html>'''
         src = os.path.join(tmp, x['id'] + '.html')

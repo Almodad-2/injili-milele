@@ -5,34 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Store Dashboard · Makala Maalum</title>
-<meta name="theme-color" content="#12172e">
+<meta name="theme-color" content="#1d2747">
 <link rel="icon" href="../assets/img/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap">
 <link rel="stylesheet" href="../assets/css/site.css?v={{BUILD_ID}}">
 <style>
   body::before { display: none; }
-  .admin-top { background: var(--ink); color: #f3ecdd; }
+  .admin-top { background: var(--ink); color: #e4e8f4; }
   .admin-top .wrap { display: flex; align-items: center; gap: 14px; height: 64px; }
-  .admin-top .brand-name { color: #f3ecdd; }
+  .admin-top .brand-name { color: #e4e8f4; }
   .admin-top .who { margin-left: auto; display: flex; align-items: center; gap: 12px; font-size: .88rem; color: #cfc8b8; }
-  .admin-top .who button { color: #f3ecdd; border-color: rgba(255,255,255,.25); background: transparent; }
+  .admin-top .who button { color: #e4e8f4; border-color: rgba(255,255,255,.25); background: transparent; }
   .tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 24px 0; scrollbar-width: none; }
   .tabs button { border: 0; background: none; padding: 12px 16px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
-  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--gold); }
+  .tabs button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--accent); }
   .tabs .count { background: var(--rose); color: #fff; font-size: .7rem; border-radius: 9px; padding: 1px 7px; }
   .view[hidden] { display: none !important; }
   .kpis { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin-bottom: 24px; }
   .kpi { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); }
   .kpi small { display: block; font-size: .74rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
   .kpi b { font-family: var(--display); font-weight: 500; font-size: 1.8rem; letter-spacing: -.01em; }
-  .kpi.gold b { color: var(--gold); }
+  .kpi.gold b { color: var(--accent); }
   .two { display: grid; gap: 18px; grid-template-columns: 1.4fr 1fr; }
   @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
   .chart { display: flex; align-items: flex-end; gap: 6px; height: 180px; padding-top: 10px; }
   .chart .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%; }
-  .chart .bar i { display: block; width: 100%; max-width: 28px; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); }
+  .chart .bar i { display: block; width: 100%; max-width: 28px; min-height: 2px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--accent-bright), var(--accent)); }
   .chart .bar span { font-size: .62rem; color: var(--muted); }
   .rank { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
   .rank li { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
@@ -64,15 +64,15 @@
   .grid2 { display: grid; gap: 10px; grid-template-columns: 1fr 1fr; }
   .lbl { font-size: .78rem; font-weight: 600; color: var(--muted); display: grid; gap: 4px; }
   .switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: .9rem; cursor: pointer; }
-  .switch input { width: 18px; height: 18px; accent-color: var(--gold); }
+  .switch input { width: 18px; height: 18px; accent-color: var(--accent); }
   .live { font-size: .78rem; color: #1f9d55; font-weight: 600; }
   .login { max-width: 420px; margin: 8vh auto; }
   .login h1 { font-family: var(--display); font-weight: 400; font-size: 2.4rem; margin: 6px 0 18px; }
   .err { color: var(--rose); font-size: .9rem; min-height: 1.2em; }
   .okmsg { color: #1f9d55; font-size: .9rem; }
-  .setup { background: #fff7e6; border: 1px solid #f0d49a; color: #5a4210; border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
-  :root[data-theme="dark"] .setup { background: #2a2414; color: #f1dcae; border-color: #5a4a20; }
-  .setup pre { background: #12172e; color: #e7dfcd; padding: 14px; border-radius: 10px; overflow: auto; max-height: 280px; font-size: .78rem; }
+  .setup { background: #e9eefb; border: 1px solid #c9d5f5; color: #2c3d6b; border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+  :root[data-theme="dark"] .setup { background: #1b2238; color: #d5def5; border-color: #34457e; }
+  .setup pre { background: #1d2747; color: #e4e8f4; padding: 14px; border-radius: 10px; overflow: auto; max-height: 280px; font-size: .78rem; }
   .setup ol li { margin-bottom: 6px; }
   .muted { color: var(--muted); }
   .chk { display: flex; flex-wrap: wrap; gap: 8px 16px; }
@@ -102,7 +102,7 @@
     <form id="loginForm" class="stack">
       <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="username" required></div>
       <div class="field"><label for="lPass">Password</label><input id="lPass" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-gold btn-block" type="submit">Sign in</button>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
     </form>
     <button class="btn btn-line btn-block" id="googleBtn" type="button" style="margin-top:10px">Sign in with Google</button>
     <p class="note" style="margin-top:14px">No password yet, or forgot it? Enter your email above and <a href="#" id="resetLink">send a password link</a>.</p>
@@ -181,7 +181,7 @@
             <label class="lbl">Note (optional)<input class="in" name="note" placeholder="e.g. Camp meeting 2026"></label>
           </div>
           <div class="lbl">Applies to (none ticked = all books)<div class="chk" id="couponProducts"></div></div>
-          <button class="btn btn-gold" type="submit">Create code</button>
+          <button class="btn btn-primary" type="submit">Create code</button>
           <p class="err" id="couponErr"></p>
         </form>
         <div class="panel"><h2>How codes work</h2>
@@ -197,7 +197,7 @@
         <form class="panel" id="adminForm">
           <h2>Add an admin</h2>
           <p class="muted">Admins can manage orders, prices and codes. Only you (super admin) can add or remove admins. They sign in here with that email.</p>
-          <div class="coupon-row"><input class="in" name="email" type="email" required placeholder="name@example.com"><button class="btn btn-gold" type="submit">Add</button></div>
+          <div class="coupon-row"><input class="in" name="email" type="email" required placeholder="name@example.com"><button class="btn btn-primary" type="submit">Add</button></div>
           <p class="err" id="adminErr"></p>
         </form>
         <div class="panel"><h2>Admins</h2><ul class="rank" id="admins"></ul></div>
@@ -237,7 +237,7 @@
       <label class="lbl">Status<select name="status"><option value="paid">Paid</option><option value="delivered">Delivered</option><option value="pending">Pending</option></select></label>
     </div>
     <label class="lbl">Note<input class="in" name="note"></label>
-    <div class="row-actions"><button class="btn btn-gold" value="save" type="submit">Save order</button><button class="btn btn-line" value="cancel" formnovalidate type="submit">Cancel</button></div>
+    <div class="row-actions"><button class="btn btn-primary" value="save" type="submit">Save order</button><button class="btn btn-line" value="cancel" formnovalidate type="submit">Cancel</button></div>
   </form>
 </dialog>
 

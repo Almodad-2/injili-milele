@@ -53,7 +53,7 @@ function waPhone(p) {
 }
 function title(id) {
   const p = catalog.find((x) => x.id === id);
-  return p ? p.title.sw : id;
+  return p ? p.title : id;
 }
 function date(ts) {
   const d = ts && ts.toDate ? ts.toDate() : null;
@@ -300,7 +300,7 @@ $('#csvBtn').addEventListener('click', () => {
 
 /* manual order */
 function renderProductChecks() {
-  const checks = catalog.map((p) => `<label><input type="checkbox" value="${esc(p.id)}"> ${esc(p.title.sw)}</label>`).join('');
+  const checks = catalog.map((p) => `<label><input type="checkbox" value="${esc(p.id)}"> ${esc(p.title)} <span class="pill st-paid">${esc(p.lang)}</span></label>`).join('');
   $('#couponProducts').innerHTML = checks;
   $('#orderProducts').innerHTML = checks;
 }
@@ -341,8 +341,8 @@ function renderProducts() {
     const o = live[p.id] || {};
     const price = typeof o.price === 'number' ? o.price : p.price;
     return `<form class="prod" data-id="${esc(p.id)}">
-      <header><img src="../assets/img/${esc(p.image)}.jpg" alt=""><div><h3>${esc(p.title.sw)}</h3>
-        <div class="meta muted">${esc(p.title.en)}</div>
+      <header><img src="../assets/img/${esc(p.image)}.jpg" alt=""><div><h3>${esc(p.title)}</h3>
+        <div class="meta muted">${p.lang === 'sw' ? 'Kiswahili store' : 'English store'}</div>
         ${live[p.id] ? '<span class="live">● Live settings</span>' : '<span class="muted" style="font-size:.78rem">Using website default</span>'}</div></header>
       <div class="grid2">
         <label class="lbl">Price (TSh)<input class="in" name="price" type="number" min="0" step="100" value="${price}"></label>
@@ -351,7 +351,7 @@ function renderProducts() {
       <label class="lbl">Delivery link (PDF on Google Drive, Dropbox…)<input class="in" name="deliveryUrl" type="url" placeholder="https://drive.google.com/…" value="${esc(o.deliveryUrl || '')}"></label>
       <div class="row-actions" style="justify-content:space-between;align-items:center">
         <label class="switch"><input type="checkbox" name="active" ${o.active === false ? '' : 'checked'}> Shown in store</label>
-        <div class="row-actions"><a class="btn btn-line btn-sm" href="${esc(p.url.sw)}" target="_blank" rel="noopener">View</a><button class="btn btn-gold btn-sm" type="submit">Save</button></div>
+        <div class="row-actions"><a class="btn btn-line btn-sm" href="${esc(p.url)}" target="_blank" rel="noopener">View</a><button class="btn btn-primary btn-sm" type="submit">Save</button></div>
       </div>
     </form>`;
   }).join('');
