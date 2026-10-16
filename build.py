@@ -64,7 +64,7 @@ T = {
         'howToPay': 'Jinsi ya kulipa', 'step1': 'Lipa jumla ya kiasi kwa namba ifuatayo kwa mtandao wowote:',
         'step2': 'Andika namba ya kumbukumbu ya oda yako kama maelezo ya malipo:',
         'step3': 'Tuma oda yako kwa WhatsApp (au barua pepe). Utapokea PDF yako mara malipo yatakapothibitishwa.',
-        'payName': 'Jina', 'orderRef': 'Kumbukumbu ya oda', 'sendOrderWa': 'Tuma oda kwa WhatsApp', 'sendOrderMail': 'Tuma kwa barua pepe',
+        'payName': 'Jina', 'copyNum': 'Nakili namba', 'orderRef': 'Kumbukumbu ya oda', 'sendOrderWa': 'Tuma oda kwa WhatsApp', 'sendOrderMail': 'Tuma kwa barua pepe',
         'freeReady': 'Bidhaa za bure ziko tayari kupakuliwa:', 'needDetails': 'Tafadhali jaza jina na namba ya simu.',
         'waHello': 'Habari! Ningependa kununua kutoka Duka la Makala Maalum.', 'waOrder': 'Oda',
         'privacy': 'Taarifa zako zinatumika kukamilisha oda yako tu.',
@@ -119,7 +119,7 @@ T = {
         'howToPay': 'How to pay', 'step1': 'Send the total amount to this number from any network:',
         'step2': 'Use your order reference as the payment description:',
         'step3': 'Send your order by WhatsApp (or email). Your PDF is delivered as soon as payment is confirmed.',
-        'payName': 'Name', 'orderRef': 'Order reference', 'sendOrderWa': 'Send order on WhatsApp', 'sendOrderMail': 'Send by email',
+        'payName': 'Name', 'copyNum': 'Copy number', 'orderRef': 'Order reference', 'sendOrderWa': 'Send order on WhatsApp', 'sendOrderMail': 'Send by email',
         'freeReady': 'Your free items are ready to download:', 'needDetails': 'Please enter your name and phone number.',
         'waHello': 'Hello! I would like to buy from the Featured Articles store.', 'waOrder': 'Order',
         'privacy': 'Your details are only used to complete your order.',
@@ -628,7 +628,7 @@ def build_cart(lang):
           <ol class="steps">
             <li><div>{t['step1']}
               <div class="paybox"><span class="num">{e(pay['number'])}</span><span>{t['payName']}: <b>{e(pay['name'])}</b></span><div class="methods">{methods}</div>
-              <button class="btn btn-line" type="button" data-copy-num="{e(pay['number'].replace(' ', ''))}" style="justify-self:start;padding:8px 14px">{ICON['link']} {t['copy']}</button></div></div></li>
+              <button class="btn btn-line" type="button" data-copy-num="{e(pay['number'].replace(' ', ''))}" style="justify-self:start;padding:8px 14px">{ICON['link']} {t['copyNum']}</button></div></div></li>
             <li><div>{t['step2']} <div class="paybox"><span>{t['orderRef']}</span><span class="ref" data-ref></span></div></div></li>
             <li><div>{t['step3']}</div></li>
           </ol>
