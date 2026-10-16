@@ -1,0 +1,14 @@
+{
+  "baseUrl": "https://almodad-2.github.io/makala-maalum/",
+  "author": "Pr. Almodad Amos Yaragwiller",
+  "email": "modaofhope@gmail.com",
+  "whatsapp": "255718834621",
+  "phoneDisplay": "+255 718 834 621",
+  "payment": {
+    "name": "Almodad Amos Yaragwiller",
+    "number": "0718 834 621",
+    "methods": ["Mixx by Yas (Tigo Pesa)", "M-Pesa", "Airtel Money", "HaloPesa"]
+  },
+  "currency": "TZS",
+  "youtube": "https://www.youtube.com/results?search_query=Pr.+Almodad+Amos"
+}

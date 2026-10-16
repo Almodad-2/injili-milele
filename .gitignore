@@ -1,0 +1,5 @@
+# Paid PDFs are delivered by hand after payment — never publish them
+store-private/
+.pdf-build/
+.DS_Store
+docs/_m.html

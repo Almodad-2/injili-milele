@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="sw">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Makala Maalum · Featured Articles</title>
+<meta name="description" content="Makala za kina juu ya Imani za Msingi za Biblia · In-depth articles on the Fundamental Beliefs of the Bible.">
+<meta name="theme-color" content="#12172e">
+<meta property="og:title" content="Makala Maalum · Featured Articles">
+<meta property="og:image" content="https://almodad-2.github.io/makala-maalum/assets/img/9c567f468b.jpg">
+<link rel="icon" href="assets/img/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600&family=Instrument+Sans:wght@400..700&display=swap">
+<link rel="stylesheet" href="assets/css/site.css?v=202610160452">
+<script>
+  // Remember the reader's language; first visit picks by browser language.
+  (function () {
+    var q = new URLSearchParams(location.search).get('lang');
+    var saved = null;
+    try { saved = localStorage.getItem('mm-lang'); } catch (e) {}
+    var pick = q || saved;
+    if (pick === 'sw' || pick === 'en') location.replace(pick + '/');
+  })();
+  function remember(l) { try { localStorage.setItem('mm-lang', l); } catch (e) {} }
+</script>
+</head>
+<body>
+<main class="lang-gate">
+  <img class="bg" src="assets/img/9c567f468b.jpg" alt="">
+  <div>
+    <img class="logo rise" src="assets/img/icon-192.png" alt="Injili Milele">
+    <h1 class="rise d1">Makala <em>Maalum</em></h1>
+    <p class="rise d2">Makala za kina juu ya Imani za Msingi za Biblia.<br><i>In-depth articles on the Fundamental Beliefs of the Bible.</i></p>
+    <div class="choices rise d3">
+      <a class="btn btn-gold" href="sw/" onclick="remember('sw')">Kiswahili <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn-ghost" href="en/" onclick="remember('en')">English <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+</main>
+</body>
+</html>
