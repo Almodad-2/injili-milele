@@ -67,6 +67,11 @@
       progress.style.transform = 'scaleX(' + p + ')';
     }
   }
+  var header = document.querySelector('.site-header');
+  var isHome = document.body.classList.contains('home');
+  var onHeader = function () { if (isHome && header) header.classList.toggle('scrolled', window.scrollY > 40); };
+  window.addEventListener('scroll', onHeader, { passive: true });
+  onHeader();
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
   if (backTop) backTop.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });

@@ -15,9 +15,10 @@ SITE = json.load(open(os.path.join(ROOT, 'content/site.json')))
 PRODUCTS = json.load(open(os.path.join(ROOT, 'content/products.json')))
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 FONTS = ('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;'
-         '1,9..144,300..700,0..100&family=Literata:ital,opsz,wght@0,7..72,400..700;1,7..72,400..600'
+         '1,9..144,300..700,0..100&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..600'
          '&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap')
 LOGO = '91060cb46f'
+ART = open(os.path.join(ROOT, 'src/art/dawn.svg'), encoding='utf-8').read()  # landing illustration
 
 PATHS = {
     'sw': {'articles': 'makala', 'store': 'duka', 'cart': 'duka/kikapu', 'about': 'kuhusu'},
@@ -32,7 +33,7 @@ T = {
         'other': 'EN', 'otherName': 'English', 'theme': 'Badili mwonekano',
         'heroKicker': 'Injili Milele · Makala Maalum',
         'heroTitle': 'Neno lililo<br><em>hai</em>, kwa kina.',
-        'readFeatured': 'Soma makala mpya', 'browse': 'Tazama makala zote',
+        'readFeatured': 'Soma makala mpya', 'browse': 'Tazama makala zote', 'scroll': 'Shuka chini',
         'verse': 'Neno lako ni taa ya miguu yangu, na mwanga wa njia yangu.', 'verseRef': 'Zaburi 119:105',
         'allArticles': 'Makala <em>zote</em>', 'library': 'Maktaba',
         'search': 'Tafuta makala…', 'all': 'Zote', 'noResults': 'Hakuna makala inayolingana na utafutaji wako.',
@@ -92,7 +93,7 @@ T = {
         'other': 'SW', 'otherName': 'Kiswahili', 'theme': 'Toggle theme',
         'heroKicker': 'Injili Milele · Featured Articles',
         'heroTitle': 'The living<br><em>Word</em>, in depth.',
-        'readFeatured': 'Read the latest', 'browse': 'Browse all articles',
+        'readFeatured': 'Read the latest', 'browse': 'Browse all articles', 'scroll': 'Scroll',
         'verse': 'Your word is a lamp to my feet and a light to my path.', 'verseRef': 'Psalm 119:105',
         'allArticles': 'All <em>articles</em>', 'library': 'Library',
         'search': 'Search articles…', 'all': 'All', 'noResults': 'No articles match your search.',
@@ -384,7 +385,7 @@ def build_home(lang):
     books = ''.join(cover(p, lang, root) for p in featured_products)
     body = f'''
 <section class="hero">
-  <div class="hero-bg"><img src="{root}assets/img/{lead['image']}.jpg" alt=""></div>
+  <div class="hero-bg">{ART}</div>
   <div class="wrap">
     <span class="eyebrow rise">{t['heroKicker']}</span>
     <h1 class="rise d1">{t['heroTitle']}</h1>
@@ -395,6 +396,7 @@ def build_home(lang):
     </div>
     <p class="hero-verse rise d4"><b>{t['verseRef']}</b><span>“{t['verse']}”</span></p>
   </div>
+  <a class="scroll-cue" href="#makala" aria-label="{t['browse']}"><span>{t['scroll']}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></a>
 </section>
 <section class="section" id="makala">
   <div class="wrap">
@@ -424,7 +426,7 @@ def build_home(lang):
 </section>'''
     other = 'en' if lang == 'sw' else 'sw'
     write(f'{lang}/', page(lang, f'{lang}/', f"{t['siteText']} — {strip_tags(t['heroTitle'].replace('<br>', ' '))}", body,
-                           image=lead['image'], active='articles', other_url=f'{other}/', products_js=True))
+                           image=lead['image'], active='articles', other_url=f'{other}/', products_js=True, body_class='home'))
 
 
 def build_article(a, i):
@@ -729,7 +731,7 @@ def build_root():
 </head>
 <body>
 <main class="lang-gate">
-  <img class="bg" src="assets/img/{lead['image']}.jpg" alt="">
+  <div class="bg">{ART}</div>
   <div>
     <img class="logo rise" src="assets/img/icon-192.png" alt="Injili Milele">
     <h1 class="rise d1">Makala <em>Maalum</em></h1>
@@ -852,7 +854,7 @@ def build_pdfs():
 <style>
 @page {{ size: A5; margin: 18mm 16mm 20mm; }}
 @page :first {{ margin: 0; }}
-body {{ font-family: Literata, Georgia, serif; font-size: 10.5pt; line-height: 1.6; color: #172018; margin: 0; }}
+body {{ font-family: 'Source Serif 4', Georgia, serif; font-size: 10.5pt; line-height: 1.6; color: #172018; margin: 0; }}
 .cover {{ height: 210mm; width: 148mm; position: relative; color: #f2f4fa; background: #1d2747; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; justify-content: space-between; padding: 22mm 16mm 18mm 20mm; box-sizing: border-box; }}
 .cover img {{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; z-index: 0; }}
 .cover::before {{ content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(29,39,71,.15), rgba(29,39,71,.95) 72%); z-index: 1; }}
