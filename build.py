@@ -504,7 +504,8 @@ def build_home(lang):
     featured_products = [p for p in BUNDLES if p['lang'] == lang][:3]
     books = ''.join(cover(p, lang, root) for p in featured_products)
     stack = ''.join(
-        f'<a class="glass" href="{root}{art_path(a)}"><img src="{root}assets/img/{a["card"]}.jpg" alt="" loading="eager">'
+        f'<a class="glass" href="{root}{art_path(a)}">'
+        f'<img src="{root}assets/img/{a["card"]}.jpg" alt="" loading="eager">'
         f'<div><small>{e(a["category"])}</small><b>{e(a["title"])}</b><span>{t["minRead"].format(n=a["minutes"])}</span></div></a>'
         for a in arts[:3])
     body = f'''
