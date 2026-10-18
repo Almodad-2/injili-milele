@@ -29,7 +29,7 @@ T = {
     'sw': {
         'site': 'Injili <em>Milele</em>', 'siteText': 'Injili Milele',
         'tagline': 'Makala za kina zinazofafanua Imani za Msingi za Biblia — kwa lugha rahisi, kwa moyo wa ibada.',
-        'home': 'Mwanzo', 'articles': 'Maktaba', 'store': 'Duka', 'about': 'Kuhusu', 'cart': 'Kikapu',
+        'home': 'Mwanzo', 'articles': 'Maktaba', 'store': 'Dukani', 'about': 'Kuhusu', 'cart': 'Kikapu',
         'other': 'EN', 'otherName': 'English', 'theme': 'Badili mwonekano',
         'heroKicker': 'Makala · Vitabu · Video · Sauti',
         'heroTitle': 'Neno lililo <em>hai</em>,<br>kwa kina.',
@@ -48,7 +48,7 @@ T = {
         'authorBio': 'Mchungaji aliyewekwa wakfu wa Kanisa la Waadventista Wasabato, mwandishi na mtengenezaji wa programu ya Imani za Msingi.',
         'guestBio': 'Makala hii imetafsiriwa na kuandaliwa kutoka Biblical Research Institute ya Kanisa la Waadventista Wasabato.',
         'play': 'Cheza video',
-        'storeKicker': 'Duka · Bidhaa za Kidijitali', 'storeTitle': 'Vitabu pepe kwa ajili ya <em>kujifunza</em> Neno.',
+        'storeKicker': 'Dukani · Bidhaa za Kidijitali', 'storeTitle': 'Vitabu pepe kwa ajili ya <em>kujifunza</em> Neno.',
         'storeText': 'Nunua kwa urahisi kwa M-Pesa, Mixx by Yas, Airtel Money au HaloPesa. Utapokea PDF yako kupitia WhatsApp au barua pepe.',
         'trust1': 'Malipo ya simu', 'trust2': 'Upokeaji wa haraka', 'trust3': 'Inasaidia huduma ya Injili',
         'products': 'Bidhaa <em>zote</em>', 'addToCart': 'Weka kikapuni', 'inCart': 'Kikapuni', 'buyNow': 'Nunua sasa',
