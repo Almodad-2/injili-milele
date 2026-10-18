@@ -1138,8 +1138,8 @@ body { font-family: 'Fira Sans', sans-serif; font-size: 10.2pt; line-height: 1.6
 .prose blockquote { margin: 3.5mm 0; padding: 3mm 4mm 3mm 4.5mm; background: #eef1f8; border-left: .8mm solid #7c93cc; border-radius: 0 2mm 2mm 0; break-inside: avoid; font-size: 9.6pt; }
 .prose blockquote p { margin: 0; text-align: left; }
 .prose blockquote cite { display: block; margin-top: 1.5mm; font-style: normal; font-weight: 700; font-size: 7.5pt; letter-spacing: .08em; text-transform: uppercase; color: #5a73aa; }
-.prose blockquote.spirit { background: #fbf6ea; border-left-color: #d1a54a; font-style: italic; }
-.prose blockquote.spirit cite { color: #9a7322; font-style: normal; }
+.prose blockquote.spirit { background: #e4e8f4; border-left-color: #5a73aa; font-style: italic; }
+.prose blockquote.spirit cite { color: #34457e; font-style: normal; }
 .prose p.key { background: #121a33; color: #eef1f8; padding: 3.2mm 4mm; border-radius: 2mm; font-weight: 500; text-align: left; break-inside: avoid; }
 .prose p.source { font-size: 7.6pt; color: #6b7285; font-style: italic; text-align: left; }
 .prose ul, .prose ol { margin: 0 0 3mm; padding-left: 5.5mm; }
