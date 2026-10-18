@@ -463,15 +463,17 @@
     };
     var total = function () { return subtotal() - discount(); };
 
+    var TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
     var render = function () {
       list.innerHTML = '';
       cart.forEach(function (id) {
         var p = PRODUCTS[id];
         var row = document.createElement('div');
         row.className = 'line-item';
-        row.innerHTML = p.coverHtml + '<div><b></b><small></small><br><button class="rm" type="button">' + T.remove + '</button></div><div class="price-slot"></div>';
-        row.querySelector('b').textContent = p.title;
-        row.querySelector('small').textContent = p.subtitle;
+        row.innerHTML = p.coverHtml + '<div class="li-body"><b class="li-title"></b><small class="li-meta"></small>' +
+          '<div class="li-foot"><span class="price-slot"></span><button class="rm" type="button">' + TRASH + '<span>' + T.remove + '</span></button></div></div>';
+        row.querySelector('.li-title').textContent = p.title;
+        row.querySelector('.li-meta').textContent = p.subtitle;
         row.querySelector('.price-slot').innerHTML = priceHtml(p);
         row.querySelector('.rm').addEventListener('click', function () {
           cart.splice(cart.indexOf(id), 1);
