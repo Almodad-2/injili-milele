@@ -95,15 +95,21 @@ T = {
         'backHome': 'Rudi Mwanzo', 'top': 'Juu',
         'fmt': {'pdf': 'PDF', 'video': 'Video', 'audio': 'Sauti', 'link': 'Kiungo', 'book': 'Kitabu'},
         'pages': 'kurasa {n}', 'readPdf': 'Soma PDF', 'downloadPdf': 'Pakua PDF', 'buyPdf': 'Nunua PDF kamili',
-        'previewNote': 'Hakiki ya bure: kurasa za mwanzo tu.', 'previewEnd': 'Umefika mwisho wa hakiki ya bure',
+        'previewNote': 'Kurasa za Mwanzo', 'previewEnd': 'Umefika mwisho wa Kurasa za Mwanzo',
         'previewEndText': 'Pata PDF kamili usome yote — kwenye simu, kompyuta au uichapishe.',
         'lockedTitle': 'PDF hii inapatikana kwa kununua', 'lockedText': 'Nunua mara moja na uisome kwenye simu, kompyuta au uichapishe.',
         'inside': 'Ndani ya PDF hii', 'samplePages': 'Kurasa za mfano', 'loadingPdf': 'Inapakia PDF…',
         'pdfError': 'Imeshindikana kupakia PDF.', 'retry': 'Jaribu tena', 'fullscreen': 'Skrini nzima', 'page': 'Ukurasa',
         'listen': 'Sikiliza', 'openLink': 'Fungua', 'freeAccess': 'Bure kusoma na kupakua',
-        'collections': 'Mikusanyiko <em>kamili</em>', 'singles': 'Makala na vitabu <em>moja moja</em>', 'audios': 'Sauti <em>na mahubiri</em>',
+        'paidItems': 'Kwa <em>mauzo</em>', 'freeItems': 'Soma <em>bure</em>',
+        'storeSearch': 'Tafuta dukani…', 'filterCat': 'Kundi', 'filterKind': 'Aina', 'filterPrice': 'Bei', 'filterTag': 'Lebo',
+        'sortBy': 'Panga', 'allCats': 'Makundi yote', 'allKinds': 'Aina zote', 'allTags': 'Lebo zote', 'kindArticle': 'Makala',
+        'priceAll': 'Bei zote', 'pricePaid': 'Zinazouzwa', 'priceFree': 'Bure', 'priceSale': 'Zenye punguzo',
+        'sortDefault': 'Kawaida', 'sortLow': 'Bei ya chini kwanza', 'sortHigh': 'Bei ya juu kwanza', 'sortTitle': 'Jina (A–Z)',
+        'clearFilters': 'Ondoa vichujio', 'storeEmpty': 'Hakuna kitu kinacholingana na vichujio vyako.',
+        'results': 'Vimepatikana {n}', 'pagesNav': 'Kurasa za duka', 'pageOf': '{n} kati ya {total}', 'prev': 'Nyuma', 'next': 'Mbele',
         'bundleSave': 'Pata zote kwa pamoja', 'printReady': 'PDF ya A5 · Inasomeka kwenye simu, kompyuta na kuchapishwa',
-        'fullPdf': 'PDF kamili', 'formats': 'Aina', 'any': 'Zote', 'previewBadge': 'hakiki ya bure',
+        'fullPdf': 'PDF kamili', 'formats': 'Aina', 'any': 'Zote', 'previewBadge': 'Kurasa za Mwanzo',
     },
     'en': {
         'site': 'Injili <em>Milele</em>', 'siteText': 'Injili Milele',
@@ -180,7 +186,13 @@ T = {
         'inside': 'Inside this PDF', 'samplePages': 'Sample pages', 'loadingPdf': 'Loading the PDF…',
         'pdfError': 'Could not load the PDF.', 'retry': 'Try again', 'fullscreen': 'Full screen', 'page': 'Page',
         'listen': 'Listen', 'openLink': 'Open', 'freeAccess': 'Free to read and download',
-        'collections': 'Complete <em>collections</em>', 'singles': 'Single articles <em>&amp; books</em>', 'audios': 'Audio <em>&amp; sermons</em>',
+        'paidItems': 'For <em>sale</em>', 'freeItems': 'Free to <em>read</em>',
+        'storeSearch': 'Search the store…', 'filterCat': 'Category', 'filterKind': 'Type', 'filterPrice': 'Price', 'filterTag': 'Tag',
+        'sortBy': 'Sort', 'allCats': 'All categories', 'allKinds': 'All types', 'allTags': 'All tags', 'kindArticle': 'Article',
+        'priceAll': 'Any price', 'pricePaid': 'For sale', 'priceFree': 'Free', 'priceSale': 'On sale',
+        'sortDefault': 'Default', 'sortLow': 'Price: low to high', 'sortHigh': 'Price: high to low', 'sortTitle': 'Title (A–Z)',
+        'clearFilters': 'Clear filters', 'storeEmpty': 'Nothing matches your filters.',
+        'results': '{n} found', 'pagesNav': 'Store pages', 'pageOf': '{n} of {total}', 'prev': 'Previous', 'next': 'Next',
         'bundleSave': 'Get them all together', 'printReady': 'A5 PDF · Reads on phone and computer, prints beautifully',
         'fullPdf': 'Full PDF', 'formats': 'Format', 'any': 'All', 'previewBadge': 'free preview',
     },
@@ -267,7 +279,7 @@ def article_products():
             out.append({
                 'id': a['pid'], 'lang': lang, 'type': kind, 'kind': kind, 'price': a.get('price', 0), 'preview': True,
                 'pdf': a['pid'], 'articles': f"{lang}:{a['slug']}", 'image': a['card'], 'slug': a['slug'],
-                'title': a['title'], 'category': a['category'], 'format': a['format'],
+                'title': a['title'], 'category': a['category'], 'format': a['format'], 'tags': a.get('tags', []),
                 'subtitle': ' · '.join(x for x in (a['category'], t['pages'].format(n=n) if n else '', t['fmt']['audio'] if kind == 'audio' else 'PDF') if x),
                 'description': a['excerpt'], 'includes': [],
             })
@@ -343,7 +355,7 @@ def page(lang, rel, title, body, *, desc='', image=None, active='', other_url=No
             'txn', 'needDetails', 'waHello', 'waOrder', 'sellHello', 'product', 'couponOk', 'couponBad',
             'couponExpired', 'couponUsed', 'couponNotFor', 'discount', 'subtotal', 'coupon', 'checking', 'sending',
             'unavailable', 'redirecting', 'payError', 'checkingPay', 'paidTitle', 'paidText', 'emailSent', 'notYet',
-            'checkAgain', 'download', 'loadingPdf', 'pdfError', 'retry', 'page', 'pages', 'previewNote', 'fullPdf')},
+            'checkAgain', 'download', 'loadingPdf', 'pdfError', 'retry', 'page', 'pages', 'previewNote', 'fullPdf', 'results', 'pageOf', 'prev', 'next', 'store')},
         'payments': SITE['paymentsUrl'],
         'fb': {'apiKey': SITE['firebase']['apiKey'], 'projectId': SITE['firebase']['projectId']},
     }
@@ -731,7 +743,7 @@ def quote(s):
     return q(s, safe='')
 
 
-def product_card(x, lang, root):
+def product_card(x, lang, root, order=0):
     t = T[lang]
     href = root + prod_path(lang, x)
     if x['kind'] in ('article', 'book', 'audio'):
@@ -744,7 +756,9 @@ def product_card(x, lang, root):
     meta = PDFMETA.get(x['id'], {})
     label = t['fmt']['audio'] if x['kind'] == 'audio' else (t['fmt']['book'] if x['kind'] == 'book' else 'PDF')
     pages = f' · {t["pages"].format(n=meta["pages"])}' if meta.get('pages') else ''
-    return f'''<article class="product reveal" data-product="{x['id']}" data-free="{0 if x['price'] else 1}">
+    search = ' '.join([x['title'], x.get('category', ''), ' '.join(x.get('tags', []))])
+    return f'''<article class="product reveal" data-product="{x['id']}" data-free="{0 if x['price'] else 1}" data-order="{order}"
+  data-cat="{e(x.get('category', ''))}" data-kind="{x['kind']}" data-tags="{e('|'.join(x.get('tags', [])))}" data-search="{e(search)}">
   <a class="cover-link" href="{href}">{cover(x, lang, root)}</a>
   <div class="card-meta"><span class="cat">{label}{pages}</span></div>
   <h3><a href="{href}">{e(x['title'])}</a></h3>
@@ -758,16 +772,38 @@ def build_store(lang):
     rel = f"{lang}/{p['store']}/"
     root = '../../'
     own = [x for x in ALL_PRODUCTS if x['lang'] == lang]
-    groups = [
-        ('collections', [x for x in own if x['kind'] == 'bundle']),
-        ('singles', [x for x in own if x['kind'] in ('article', 'book')]),
-        ('audios', [x for x in own if x['kind'] == 'audio']),
-    ]
-    sections = ''.join(f'''
-  <div class="store-group" id="{key}">
-    <div class="section-head"><div><span class="kicker">{t['store']} · {len(items)}</span><h2>{t[key]}</h2></div></div>
-    <div class="products">{''.join(product_card(x, lang, root) for x in items)}</div>
-  </div>''' for key, items in groups if items)
+    cards = ''.join(product_card(x, lang, root, i) for i, x in enumerate(own))
+
+    def select(key, label, options):
+        opts = ''.join(f'<option value="{e(v)}">{e(n)}</option>' for v, n in options)
+        return f'<label class="select"><span>{label}</span><select data-f="{key}">{opts}</select></label>'
+    kind_names = {'article': t['kindArticle'], 'book': t['fmt']['book'], 'audio': t['fmt']['audio']}
+    cats = list(dict.fromkeys(x['category'] for x in own if x.get('category')))
+    kinds = [k for k in kind_names if any(x['kind'] == k for x in own)]
+    tags = list(dict.fromkeys(g for x in own for g in x.get('tags', [])))
+    filters = (
+        (select('cat', t['filterCat'], [('', t['allCats'])] + [(c, c) for c in cats]) if len(cats) > 1 else '') +
+        (select('kind', t['filterKind'], [('', t['allKinds'])] + [(k, kind_names[k]) for k in kinds]) if len(kinds) > 1 else '') +
+        select('price', t['filterPrice'], [('', t['priceAll']), ('paid', t['pricePaid']), ('free', t['priceFree']), ('sale', t['priceSale'])]) +
+        (select('tag', t['filterTag'], [('', t['allTags'])] + [(g, g) for g in tags]) if tags else '') +
+        select('sort', t['sortBy'], [('', t['sortDefault']), ('low', t['sortLow']), ('high', t['sortHigh']), ('title', t['sortTitle'])]))
+    group = lambda key, size: f'''
+  <div class="store-group" data-group="{key}" data-size="{size}" hidden>
+    <div class="section-head"><div><span class="kicker">{t['store']} · <span data-count></span></span><h2>{t[key + 'Items']}</h2></div></div>
+    <div class="products" data-list></div>
+    <nav class="pager" data-pager aria-label="{t['pagesNav']}"></nav>
+  </div>'''
+    sections = f'''
+  <div class="store-filters panel">
+    <label class="search">{ICON['search']}<span class="sr-only">{t['storeSearch']}</span><input type="search" data-f="q" placeholder="{t['storeSearch']}" autocomplete="off"></label>
+    <div class="filter-row">{filters}</div>
+    <div class="filter-foot" hidden><span data-results></span><button class="link-btn" type="button" data-clear hidden>{t['clearFilters']}</button></div>
+  </div>
+  <p class="store-loading" data-loading><span class="spin"></span></p>
+  {group('paid', 5)}
+  {group('free', 10)}
+  <p class="store-empty" data-store-empty hidden>{t['storeEmpty']}</p>
+  <div class="products" data-pool>{cards}</div>'''
     body = f'''
 <section class="store-hero">
   <div class="wrap">
@@ -780,7 +816,7 @@ def build_store(lang):
 <section class="section">
   <div class="wrap">
     <div class="store-top"><a class="btn btn-line" href="{root}{lang}/{p['cart']}/">{ICON['bag']} {t['cart']}</a></div>
-    {sections}
+    <div data-shop>{sections}</div>
   </div>
 </section>'''
     other = 'en' if lang == 'sw' else 'sw'
@@ -1082,17 +1118,16 @@ STUDY_QUESTIONS = {
 
 
 PRIVATE = os.path.join(ROOT, 'store-private')
+PREVIEW_PAGES = 3   # free preview of a priced PDF: cover + the first two pages
 VIDEO_RE = r'<div class="video" data-yt="([^"]+)" data-title="([^"]*)"></div>'
 PDF_TEXT = {
     'sw': {'contents': 'Yaliyomo', 'questions': 'Maswali ya Kujadili', 'more': 'Zaidi kutoka Injili Milele',
            'moreText': 'Makala, vitabu, video na sauti zaidi zinapatikana kwenye maktaba ya Injili Milele:',
-           'continue': 'Endelea kusoma', 'continueText': 'Hii ni hakiki ya bure ya kurasa za mwanzo. Pata PDF kamili kwenye Injili Milele usome yote — kwenye simu, kompyuta au uichapishe.',
-           'getFull': 'Pata PDF kamili hapa:', 'preview': 'Hakiki ya bure', 'rights': 'Haki zote zimehifadhiwa. Usiuze nakala hii bila ruhusa ya maandishi ya mwandishi.',
+           'rights': 'Haki zote zimehifadhiwa. Usiuze nakala hii bila ruhusa ya maandishi ya mwandishi.',
            'contact': 'Wasiliana nasi', 'by': 'Na'},
     'en': {'contents': 'Contents', 'questions': 'Discussion Questions', 'more': 'More from Injili Milele',
            'moreText': 'More articles, books, video and audio are waiting in the Injili Milele library:',
-           'continue': 'Keep reading', 'continueText': 'This is a free preview of the first pages. Get the full PDF from Injili Milele to read it all — on your phone, computer or in print.',
-           'getFull': 'Get the full PDF here:', 'preview': 'Free preview', 'rights': 'All rights reserved. Do not sell this copy without the author’s written permission.',
+           'rights': 'All rights reserved. Do not sell this copy without the author’s written permission.',
            'contact': 'Contact us', 'by': 'By'},
 }
 
@@ -1154,11 +1189,6 @@ body { font-family: 'Fira Sans', sans-serif; font-size: 10.2pt; line-height: 1.6
 .qs { margin-top: 7mm; padding: 5mm; border: .3mm solid #dfe4f1; border-radius: 3mm; break-inside: avoid; }
 .qs h3 { font-family: 'Sora', sans-serif; font-weight: 700; margin: 0 0 3mm; color: #5a73aa; font-size: 11pt; }
 .qs li { margin-bottom: 3mm; } .qs .lines { height: 11mm; border-bottom: .3mm dotted #c4cbdd; }
-.end { break-before: page; page: plain; height: 172mm; display: flex; flex-direction: column; justify-content: center; text-align: center; }
-.end .k { font-size: 7pt; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #5a73aa; }
-.end h2 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20pt; letter-spacing: -.02em; margin: 3mm 0 4mm; }
-.end p { font-size: 9.6pt; color: #4b5266; margin: 0 auto 5mm; max-width: 95mm; }
-.end .url { display: inline-block; margin: 2mm auto; padding: 3mm 5mm; border-radius: 10mm; background: #121a33; color: #fff; font-weight: 700; font-size: 8.6pt; text-decoration: none; }
 .back { break-before: page; page: plain; display: flex; flex-direction: column; min-height: 172mm; }
 .back h2 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 17pt; letter-spacing: -.02em; margin: 0 0 2mm; }
 .back > p { font-size: 9pt; color: #4b5266; margin: 0 0 5mm; }
@@ -1177,48 +1207,26 @@ def pdf_body(a):
     return body.replace('{{root}}', SITE['baseUrl'])
 
 
-def top_blocks(body):
-    return [m.group(0) for m in re.finditer(r'<(p|h2|h3|blockquote|ul|ol|div|figure|section)\b[^>]*>.*?</\1>', body, re.S)]
-
-
-def preview_cut(body, share=.3):
-    """First ~30% of an article, never ending on a heading."""
-    blocks = top_blocks(body)
-    n = max(4, round(len(blocks) * share))
-    keep = blocks[:n]
-    while keep and re.match(r'<h[23]', keep[-1]):
-        keep.pop()
-    return ''.join(keep)
-
-
 def pdf_html(spec):
-    """spec: lang, title, subtitle, image, cat, arts, study, preview, url, kind ('single'|'bundle')."""
+    """spec: lang, title, subtitle, image, cat, arts, study, url, kind ('single'|'bundle')."""
     lang, tx = spec['lang'], PDF_TEXT[spec['lang']]
-    arts, single, preview = spec['arts'], spec['kind'] == 'single', spec['preview']
+    arts, single = spec['arts'], spec['kind'] == 'single'
     year = datetime.date.today().year
     parts = []
     for i, a in enumerate(arts):
         body = pdf_body(a)
-        if preview:
-            body = preview_cut(body, .3 if single else .45)
         q = ''
-        if spec.get('study') and a['slug'] in STUDY_QUESTIONS and not preview:
+        if spec.get('study') and a['slug'] in STUDY_QUESTIONS:
             q = f'<section class="qs"><h3>{tx["questions"]}</h3><ol>' + ''.join(
                 f'<li>{e(s)}<div class="lines"></div></li>' for s in STUDY_QUESTIONS[a['slug']]) + '</ol></section>'
         hero = '' if single else f'<img class="hero" src="file://{ROOT}/assets/img/{a["image"]}.jpg">'
         head = '' if single else f'<div class="cat">{e(a["category"])}</div><h1>{e(a["title"])}</h1>'
         by = f'<div class="by">{tx["by"]} {e(a["author"])}</div>' if not single else ''
         parts.append(f'<section class="art" id="a{i}">{hero}{head}{by}<div class="prose">{body}</div>{q}</section>')
-        if preview:
-            break
     toc = ''
     if not single:
         toc = f'<section class="toc"><h2>{tx["contents"]}</h2><ol>' + ''.join(
             f'<li><a href="#a{i}">{e(a["title"])}<span>{e(a["category"])}</span></a></li>' for i, a in enumerate(arts)) + '</ol></section>'
-    end = ''
-    if preview:
-        end = (f'<section class="end"><div class="k">{tx["preview"]}</div><h2>{tx["continue"]}…</h2><p>{tx["continueText"]}</p>'
-               f'<p>{tx["getFull"]}</p><a class="url" href="{spec["url"]}">{spec["url"].replace("https://", "")}</a></section>')
     others = [b for b in ARTS[lang] if b not in arts and b['format'] != 'link'][:6]
     back = (f'<section class="back"><h2>{tx["more"]}</h2><p>{tx["moreText"]}</p><ul>' +
             ''.join(f'<li>{e(b["title"])}<span>{e(b["category"])} · {T[lang]["fmt"]["book"] if b.get("kind") == "book" else T[lang]["fmt"][b["format"]]}</span></li>' for b in others) +
@@ -1226,16 +1234,15 @@ def pdf_html(spec):
             f'WhatsApp {SITE["phoneDisplay"]} · {SITE["email"]}</div>'
             f'<p class="legal">© {year} {e(SITE["author"])} · Injili Milele. {tx["rights"]}</p></section>')
     single_by = e(arts[0]['author']) if single else e(SITE['author'])
-    badge = f'<b>{tx["preview"]}</b>' if preview else '<span>PDF</span>'
     running = spec['title'] if len(spec['title']) < 48 else spec['title'][:46].rsplit(' ', 1)[0] + '…'
     css = PDF_CSS.replace('__RUNNING__', running.replace('"', '\\"'))
     return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><title>{e(spec['title'])}</title>
 <link rel="stylesheet" href="{FONTS}"><style>{css}</style></head><body>
 <section class="cover"><div class="art"><img src="file://{ROOT}/assets/img/{spec['image']}.jpg">
-<div class="k"><span>Injili Milele</span>{badge}</div></div>
+<div class="k"><span>Injili Milele</span><span>PDF</span></div></div>
 <div class="info"><div class="cat">{e(spec['cat'])}</div><h1>{e(spec['title'])}</h1><p>{e(spec['subtitle'])}</p>
 <div class="a"><span>{single_by}</span><span>{year}</span></div></div></section>
-{toc}{''.join(parts)}{end}{back}
+{toc}{''.join(parts)}{back}
 </body></html>'''
 
 
@@ -1283,16 +1290,15 @@ def build_pdfs(only=None):
         prev = os.path.join(PRIVATE, 'preview', spec['id'] + '.pdf')
         os.makedirs(os.path.dirname(prev), exist_ok=True)
         if spec.get('file'):
-            # an uploaded PDF is sold as it is; its preview is the first pages
-            shutil.copy(os.path.join(ROOT, 'content/files', spec['file']), full)
-            d = pymupdf.open(full)
-            p = pymupdf.open()
-            p.insert_pdf(d, to_page=max(1, min(d.page_count // 3, 6)) - 1)
-            p.save(prev)
+            shutil.copy(os.path.join(ROOT, 'content/files', spec['file']), full)   # an uploaded PDF is sold as it is
         else:
-            chrome_pdf(pdf_html(dict(spec, preview=False)), full)
-            chrome_pdf(pdf_html(dict(spec, preview=True)), prev)
-        d, p = pymupdf.open(full), pymupdf.open(prev)
+            chrome_pdf(pdf_html(spec), full)
+        # the free preview is the first pages of the real file, cover included
+        d = pymupdf.open(full)
+        p = pymupdf.open()
+        p.insert_pdf(d, to_page=min(PREVIEW_PAGES, d.page_count) - 1)
+        p.save(prev)
+        p = pymupdf.open(prev)
         n = min(3, p.page_count)
         for i in range(n):
             pg = p[i]

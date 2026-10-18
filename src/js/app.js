@@ -300,6 +300,121 @@
   });
   renderBadge();
 
+  /* ---------- store: filters, items for sale first, then free items, each paged ---------- */
+  var shop = document.querySelector('[data-shop]');
+  if (shop) {
+    var pool = shop.querySelector('[data-pool]');
+    var items = Array.prototype.slice.call(pool.children);
+    var controls = Array.prototype.slice.call(shop.querySelectorAll('[data-f]'));
+    var groups = Array.prototype.slice.call(shop.querySelectorAll('[data-group]')).map(function (el) {
+      return { key: el.getAttribute('data-group'), el: el, size: Number(el.getAttribute('data-size')), page: 1,
+        list: el.querySelector('[data-list]'), pager: el.querySelector('[data-pager]'), count: el.querySelector('[data-count]') };
+    });
+    var resultsEl = shop.querySelector('[data-results]');
+    var clearBtn = shop.querySelector('[data-clear]');
+    var emptyEl = shop.querySelector('[data-store-empty]');
+    var foldText = function (x) { return (x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+    var priceOf = function (c) { var p = PRODUCTS[c.getAttribute('data-product')]; return (p && p.price) || 0; };
+    var val = function (key) { var el = shop.querySelector('[data-f="' + key + '"]'); return el ? el.value.trim() : ''; };
+
+    // filters and pages live in the address, so a shared link or the back button opens the same view
+    var params = new URLSearchParams(location.search);
+    controls.forEach(function (el) {
+      var v = params.get(el.getAttribute('data-f'));
+      if (v !== null && (el.tagName !== 'SELECT' || el.querySelector('option[value="' + CSS.escape(v) + '"]'))) el.value = v;
+    });
+    groups.forEach(function (g) { g.page = Math.max(1, parseInt(params.get(g.key), 10) || 1); });
+
+    var saveState = function () {
+      var q = new URLSearchParams();
+      controls.forEach(function (el) { if (el.value.trim()) q.set(el.getAttribute('data-f'), el.value.trim()); });
+      groups.forEach(function (g) { if (g.page > 1) q.set(g.key, g.page); });
+      var s = q.toString();
+      history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash);
+    };
+
+    var pagerHtml = function (g, pages) {
+      var b = function (n, label, extra) {
+        return '<button type="button" data-page="' + n + '"' + (extra || '') + '>' + label + '</button>';
+      };
+      var h = '';
+      if (pages > 1) {
+        var nums = [];
+        for (var n = 1; n <= pages; n++) {
+          if (n === 1 || n === pages || Math.abs(n - g.page) <= 1) nums.push(n);
+          else if (nums[nums.length - 1] !== '…') nums.push('…');
+        }
+        h += b(g.page - 1, '‹ ' + T.prev, ' class="step"' + (g.page === 1 ? ' disabled' : ''));
+        h += '<span class="nums">' + nums.map(function (n) {
+          return n === '…' ? '<span class="gap">…</span>' : b(n, n, n === g.page ? ' aria-current="page"' : '');
+        }).join('') + '</span>';
+        h += b(g.page + 1, T.next + ' ›', ' class="step"' + (g.page === pages ? ' disabled' : ''));
+      }
+      return h + '<span class="of">' + T.pageOf.replace('{n}', g.page).replace('{total}', pages) + '</span>';
+    };
+
+    var render = function () {
+      var q = foldText(val('q')), cat = val('cat'), kind = val('kind'), price = val('price'), tag = val('tag'), sort = val('sort');
+      var shown = items.filter(function (c) {
+        var p = PRODUCTS[c.getAttribute('data-product')] || {};
+        if (p.active === false) return false;
+        if (cat && c.getAttribute('data-cat') !== cat) return false;
+        if (kind && c.getAttribute('data-kind') !== kind) return false;
+        if (tag && ('|' + c.getAttribute('data-tags') + '|').indexOf('|' + tag + '|') === -1) return false;
+        if (price === 'paid' && !p.price) return false;
+        if (price === 'free' && p.price) return false;
+        if (price === 'sale' && !(p.was > p.price)) return false;
+        return !q || foldText(c.getAttribute('data-search')).indexOf(q) !== -1;
+      });
+      var order = function (c) { return Number(c.getAttribute('data-order')); };
+      shown.sort(function (a, b) {
+        if (sort === 'low' || sort === 'high') {
+          var d = priceOf(a) - priceOf(b);
+          if (d) return sort === 'low' ? d : -d;
+        }
+        if (sort === 'title') return a.querySelector('h3').textContent.localeCompare(b.querySelector('h3').textContent, MM.lang);
+        return order(a) - order(b);
+      });
+      groups.forEach(function (g) {
+        var mine = shown.filter(function (c) { return (priceOf(c) > 0) === (g.key === 'paid'); });
+        var pages = Math.max(1, Math.ceil(mine.length / g.size));
+        g.page = Math.min(g.page, pages);
+        var slice = mine.slice((g.page - 1) * g.size, g.page * g.size);
+        while (g.list.firstChild) pool.appendChild(g.list.firstChild);
+        slice.forEach(function (c) { c.hidden = false; c.classList.add('in'); g.list.appendChild(c); });
+        g.count.textContent = mine.length;
+        g.pager.innerHTML = pagerHtml(g, pages);
+        g.el.hidden = !mine.length;
+      });
+      var filtered = controls.some(function (el) { return el.getAttribute('data-f') !== 'sort' && el.value.trim(); });
+      resultsEl.textContent = filtered ? T.results.replace('{n}', shown.length) : '';
+      clearBtn.parentNode.hidden = clearBtn.hidden = !filtered && !val('sort');
+      emptyEl.hidden = shown.length > 0;
+      saveState();
+    };
+
+    groups.forEach(function (g) {
+      g.pager.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-page]');
+        if (!b || b.disabled) return;
+        g.page = Number(b.getAttribute('data-page'));
+        render();
+        var top = g.el.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      });
+    });
+    var refilter = function () { groups.forEach(function (g) { g.page = 1; }); render(); };
+    controls.forEach(function (el) { el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', refilter); });
+    clearBtn.addEventListener('click', function () { controls.forEach(function (el) { el.value = ''; }); refilter(); });
+
+    // sort into "for sale" and "free" only once the dashboard prices are known
+    livePrices.then(function () {
+      shop.querySelector('[data-loading]').hidden = true;
+      pool.hidden = true;
+      render();
+    });
+  }
+
   /* ---------- checkout page ---------- */
   var co = document.querySelector('[data-checkout]');
   if (co) {
