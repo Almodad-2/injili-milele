@@ -565,7 +565,7 @@ body.home .site-header:not(.scrolled) .lang-switch { border-color: rgba(255, 255
 .reader-bar .spacer { flex: 1; }
 .reader-state { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); flex-wrap: wrap; }
 .pageinfo { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tag { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; background: color-mix(in srgb, #f2c14e 35%, transparent); color: var(--text); }
+.tag { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .tag.ok { background: color-mix(in srgb, #2e8b57 18%, transparent); color: #2e8b57; }
 .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

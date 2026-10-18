@@ -1145,7 +1145,6 @@ body { font-family: 'Fira Sans', sans-serif; font-size: 10.2pt; line-height: 1.6
 .cover .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .cover .art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(14,21,48,.55) 0%, rgba(14,21,48,0) 16%, rgba(14,21,48,0) 80%, #0e1530 100%); }
 .cover .k { position: absolute; z-index: 2; top: 8mm; left: 12mm; right: 12mm; font-size: 6.8pt; font-weight: 700; letter-spacing: .28em; text-transform: uppercase; color: #fff; display: flex; justify-content: space-between; align-items: center; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
-.cover .k b { color: #0e1530; background: #f2c14e; padding: 1mm 2.4mm; border-radius: 1mm; letter-spacing: .16em; text-shadow: none; }
 .cover .info { flex: 1; display: flex; flex-direction: column; padding: 3mm 13mm 10mm; }
 .cover .cat { font-size: 6.8pt; font-weight: 700; letter-spacing: .24em; text-transform: uppercase; color: #a3b7ea; margin-bottom: 2.5mm; }
 .cover h1 { font-family: 'Sora', sans-serif; font-weight: 800; font-size: 16pt; line-height: 1.14; letter-spacing: -.015em; margin: 0 0 2.5mm;
