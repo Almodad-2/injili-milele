@@ -39,7 +39,7 @@ T = {
         'search': 'Tafuta katika maktaba…', 'all': 'Zote', 'noResults': 'Hakuna makala inayolingana na utafutaji wako.',
         'read': 'Soma', 'min': 'dak.', 'minRead': 'dakika {n} za kusoma', 'video': 'Video',
         'bandKicker': 'Duka la Kidijitali', 'bandTitle': 'Beba makala hizi <em>popote</em> uendapo.',
-        'bandText': 'Mikusanyiko kamili ya PDF iliyopangwa kwa ustadi — kwa ajili ya kujisomea, vikundi vya Biblia na kuchapisha.',
+        'bandText': 'Kila makala ni PDF iliyopangwa kwa ustadi — kwa ajili ya kujisomea, vikundi vya Biblia na kuchapisha.',
         'visitStore': 'Tembelea Duka',
         'by': 'Na', 'share': 'Shiriki', 'copy': 'Nakili kiungo', 'copied': 'Kiungo kimenakiliwa',
         'smaller': 'Punguza maandishi', 'bigger': 'Ongeza maandishi', 'print': 'Chapisha',
@@ -118,7 +118,7 @@ T = {
         'search': 'Search the library…', 'all': 'All', 'noResults': 'No articles match your search.',
         'read': 'Read', 'min': 'min', 'minRead': '{n} min read', 'video': 'Video',
         'bandKicker': 'Digital Store', 'bandTitle': 'Take these articles <em>anywhere</em>.',
-        'bandText': 'Complete, beautifully typeset PDF collections for personal study, Bible study groups and printing.',
+        'bandText': 'Every article is a beautifully typeset PDF for personal study, Bible study groups and printing.',
         'visitStore': 'Visit the Store',
         'by': 'By', 'share': 'Share', 'copy': 'Copy link', 'copied': 'Link copied',
         'smaller': 'Smaller text', 'bigger': 'Larger text', 'print': 'Print',
@@ -501,7 +501,7 @@ def build_home(lang):
         fchips = (f'<div class="chips formats" role="group" aria-label="{t["formats"]}">'
                   f'<button class="chip" type="button" data-format-filter="all" aria-pressed="true">{t["any"]}</button>' + ''.join(
                       f'<button class="chip" type="button" data-format-filter="{f}" aria-pressed="false">{t["fmt"][f]}</button>' for f in present) + '</div>')
-    featured_products = [p for p in BUNDLES if p['lang'] == lang][:3]
+    featured_products = [p for p in ALL_PRODUCTS if p['lang'] == lang and p['kind'] != 'audio'][:3]
     books = ''.join(cover(p, lang, root) for p in featured_products)
     stack = ''.join(
         f'<a class="glass" href="{root}{art_path(a)}">'
