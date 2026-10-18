@@ -195,7 +195,7 @@
     return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, ms); })]);
   }
   function fsGet(path) {
-    return withTimeout(fetch(API + DB + '/' + path + '?key=' + FB.apiKey), 8000).then(function (r) {
+    return withTimeout(fetch(API + DB + '/' + path + (path.indexOf('?') === -1 ? '?' : '&') + 'key=' + FB.apiKey), 8000).then(function (r) {
       if (r.status === 404) return null;
       if (!r.ok) throw new Error('http ' + r.status);
       return r.json();
