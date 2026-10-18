@@ -101,7 +101,8 @@ T = {
         'inside': 'Ndani ya PDF hii', 'samplePages': 'Kurasa za mfano', 'loadingPdf': 'Inapakia PDF…',
         'pdfError': 'Imeshindikana kupakia PDF.', 'retry': 'Jaribu tena', 'fullscreen': 'Skrini nzima', 'page': 'Ukurasa',
         'listen': 'Sikiliza', 'openLink': 'Fungua', 'freeAccess': 'Bure kusoma na kupakua',
-        'paidItems': 'Kwa <em>mauzo</em>', 'freeItems': 'Soma <em>bure</em>',
+        'paidItems': 'Vya kununua', 'freeItems': 'Soma bure',
+        'paidNote': 'PDF kamili baada ya malipo · Kurasa za Mwanzo ni bure', 'freeNote': 'Soma na pakua bila malipo yoyote',
         'storeSearch': 'Tafuta dukani…', 'filterCat': 'Kundi', 'filterKind': 'Aina', 'filterPrice': 'Bei', 'filterTag': 'Lebo',
         'sortBy': 'Panga', 'allCats': 'Makundi yote', 'allKinds': 'Aina zote', 'allTags': 'Lebo zote', 'kindArticle': 'Makala',
         'priceAll': 'Bei zote', 'pricePaid': 'Zinazouzwa', 'priceFree': 'Bure', 'priceSale': 'Zenye punguzo',
@@ -186,7 +187,8 @@ T = {
         'inside': 'Inside this PDF', 'samplePages': 'Sample pages', 'loadingPdf': 'Loading the PDF…',
         'pdfError': 'Could not load the PDF.', 'retry': 'Try again', 'fullscreen': 'Full screen', 'page': 'Page',
         'listen': 'Listen', 'openLink': 'Open', 'freeAccess': 'Free to read and download',
-        'paidItems': 'For <em>sale</em>', 'freeItems': 'Free to <em>read</em>',
+        'paidItems': 'For sale', 'freeItems': 'Free to read',
+        'paidNote': 'Full PDF after payment · the first pages are free', 'freeNote': 'Read and download at no cost',
         'storeSearch': 'Search the store…', 'filterCat': 'Category', 'filterKind': 'Type', 'filterPrice': 'Price', 'filterTag': 'Tag',
         'sortBy': 'Sort', 'allCats': 'All categories', 'allKinds': 'All types', 'allTags': 'All tags', 'kindArticle': 'Article',
         'priceAll': 'Any price', 'pricePaid': 'For sale', 'priceFree': 'Free', 'priceSale': 'On sale',
@@ -787,9 +789,17 @@ def build_store(lang):
         select('price', t['filterPrice'], [('', t['priceAll']), ('paid', t['pricePaid']), ('free', t['priceFree']), ('sale', t['priceSale'])]) +
         (select('tag', t['filterTag'], [('', t['allTags'])] + [(g, g) for g in tags]) if tags else '') +
         select('sort', t['sortBy'], [('', t['sortDefault']), ('low', t['sortLow']), ('high', t['sortHigh']), ('title', t['sortTitle'])]))
+    group_icon = {
+        'paid': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>',
+        'free': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5h6a4 4 0 0 1 4 4v11a3 3 0 0 0-3-3H2z"/><path d="M22 5h-6a4 4 0 0 0-4 4v11a3 3 0 0 1 3-3h7z"/></svg>',
+    }
     group = lambda key, size: f'''
   <div class="store-group" data-group="{key}" data-size="{size}" hidden>
-    <div class="section-head"><div><span class="kicker">{t['store']} · <span data-count></span></span><h2>{t[key + 'Items']}</h2></div></div>
+    <div class="group-head">
+      <span class="gh-icon" aria-hidden="true">{group_icon[key]}</span>
+      <div class="gh-text"><h2>{t[key + 'Items']}</h2><p>{t[key + 'Note']}</p></div>
+      <span class="gh-count" data-count></span>
+    </div>
     <div class="products" data-list></div>
     <nav class="pager" data-pager aria-label="{t['pagesNav']}"></nav>
   </div>'''

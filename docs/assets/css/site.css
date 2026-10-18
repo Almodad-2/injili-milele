@@ -610,7 +610,14 @@ body.home .site-header:not(.scrolled) .lang-switch { border-color: rgba(255, 255
 
 /* ---------- Store groups ---------- */
 .store-top { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-.store-group + .store-group { margin-top: clamp(48px, 7vw, 80px); }
+.store-group + .store-group { margin-top: clamp(44px, 6vw, 64px); }
+.group-head { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; margin-bottom: clamp(20px, 3vw, 28px); border-bottom: 1px solid var(--line); }
+.gh-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.gh-icon svg { width: 20px; height: 20px; }
+.gh-text { flex: 1; min-width: 0; }
+.gh-text h2 { font-family: var(--display); font-weight: 700; font-size: 1.2rem; line-height: 1.2; letter-spacing: -.01em; margin: 0; color: var(--text); }
+.gh-text p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+.gh-count { flex: none; min-width: 30px; padding: 3px 10px; border-radius: 999px; text-align: center; font-size: .8rem; font-weight: 700; color: var(--muted); background: var(--card); border: 1px solid var(--line); }
 .store-filters { display: grid; gap: 14px; margin-bottom: clamp(32px, 5vw, 56px); }
 .store-filters .search { background: var(--paper); box-shadow: none; }
 .filter-row { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
